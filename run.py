@@ -1,6 +1,15 @@
-### LOADING EMDEDDINGS AND DATA
+### IMPORTS AND CONSTANTS
 
 import numpy as np
+import csv
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+# !pip install scikit-learn
+
+test_data_path = 'twitter-datasets/test_data.txt'
+
+### DATA LOADING
 
 # Load the word embeddings
 word_embeddings = np.load('embeddings.npy')
@@ -32,14 +41,7 @@ neg_labels = -1 * np.ones(len(neg_tweets), dtype=int)  # Assign label -1 for neg
 train_tweets = pos_tweets + neg_tweets
 labels = np.concatenate((pos_labels, neg_labels), axis=0)
 
-### TRAINING THE LINEAR CLASSIFIER
-# !pip install scikit-learn
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
-
-# Step 2: Construct Features for Training Texts
+### DEFINE FUNCTIONS
 
 def average_word_vectors(tweet, word_to_embedding):
     words = tweet.split()
@@ -49,33 +51,7 @@ def average_word_vectors(tweet, word_to_embedding):
     else:
         # If none of the words in the tweet are in the embeddings, return a zero vector
         return np.zeros_like(word_embeddings[0])
-
-
-# Construct feature representations for training tweets
-train_features = [average_word_vectors(tweet, word_to_embedding) for tweet in train_tweets]
-
-# Step 3: Train a Linear Classifier
-
-# Split the data into training and validation sets
-X_train, X_val, y_train, y_val = train_test_split(train_features, labels, test_size=0.1, random_state=42)
-
-# Initialize and train the model
-model = LogisticRegression()
-model.fit(X_train, y_train)
-
-# Validate
-y_pred = model.predict(X_val)
-accuracy = accuracy_score(y_val, y_pred)
-print(f"Validation Accuracy: {accuracy}")
-
-# Construct feature representations for test tweets
-import csv
-test_data_path = 'twitter-datasets/test_data.txt'
-test_features = [average_word_vectors(tweet, word_to_embedding) for tweet in test_tweets]
-
-# Make predictions
-y_test_pred = model.predict(test_features)
-
+    
 def create_csv_submission(ids, y_pred, name):
     """
     This function creates a csv file named 'name' in the format required for a submission in Kaggle or AIcrowd.
@@ -106,8 +82,33 @@ def get_test_ids(path):
         lines[rowidx] = lines[rowidx][:index]
     return lines
 
+### TRAINING THE LINEAR CLASSIFIER
+
+# Construct feature representations for training tweets
+train_features = [average_word_vectors(tweet, word_to_embedding) for tweet in train_tweets]
+
+# Split the data into training and validation sets
+X_train, X_val, y_train, y_val = train_test_split(train_features, labels, test_size=0.1, random_state=42)
+
+# Initialize and train the model
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Validate
+y_pred = model.predict(X_val)
+accuracy = accuracy_score(y_val, y_pred)
+print(f"Validation Accuracy: {accuracy}")
+
+### LINEAR CLASSIFIER PREDICTIONS
+
+# Construct feature representations for test tweets
+test_features = [average_word_vectors(tweet, word_to_embedding) for tweet in test_tweets]
+
+# Make predictions
+y_test_pred = model.predict(test_features)
 ids_test = get_test_ids(test_data_path)
 print(y_test_pred)
+
 y_pred = []
 y_pred = y_test_pred
 y_pred[y_pred <= 0] = -1
