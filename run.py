@@ -78,12 +78,20 @@ y_test_pred = model.predict(test_features)
 
 def create_csv_submission(ids, y_pred, name):
     """
-    Creates an output file in .csv format for submission to Kaggle or AIcrowd
-    Arguments: ids (event ids associated with each prediction)
-               y_pred (predicted class labels)
-               name (string name of .csv output file to be created)
+    This function creates a csv file named 'name' in the format required for a submission in Kaggle or AIcrowd.
+    The file will contain two columns the first with 'ids' and the second with 'y_pred'.
+    y_pred must be a list or np.array of 1 and -1 otherwise the function will raise a ValueError.
+
+    Args:
+        ids (list,np.array): indices
+        y_pred (list,np.array): predictions on data correspondent to indices
+        name (str): name of the file to be created
     """
-    with open(name, "w") as csvfile:
+    # Check that y_pred only contains -1 and 1
+    if not all(i in [-1, 1] for i in y_pred):
+        raise ValueError("y_pred can only contain values -1, 1")
+
+    with open(name, "w", newline="") as csvfile:
         fieldnames = ["Id", "Prediction"]
         writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=fieldnames)
         writer.writeheader()
@@ -99,6 +107,7 @@ def get_test_ids(path):
     return lines
 
 ids_test = get_test_ids(test_data_path)
+print(y_test_pred)
 y_pred = []
 y_pred = y_test_pred
 y_pred[y_pred <= 0] = -1
