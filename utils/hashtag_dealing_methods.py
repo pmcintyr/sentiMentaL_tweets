@@ -7,11 +7,12 @@ def split_hashtag(text, token='#', vocabulary=set()):
     if not match:
         return []
 
-    hashtag = match.group(1).lower()  # Convert to lowercase for matching
+    hashtag = match.group(1)
     
     # Check if the entire hashtag is in the vocabulary
-    if hashtag in vocabulary:
-        return [hashtag]
+    full_hashtag = token + hashtag
+    if full_hashtag in vocabulary:
+        return [full_hashtag]
     
     
     words = []
@@ -35,7 +36,7 @@ def split_hashtag(text, token='#', vocabulary=set()):
         else:
             break  # No further matches found
 
-    return words if words else [hashtag]  # Return the original hashtag if no words found
+    return words if words else [full_hashtag]  # Return the original hashtag if no words found
 
 
 def process_tweets_hashtags(train_tweets_pos, train_tweets_neg, test_tweets, vocabulary):

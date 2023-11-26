@@ -51,7 +51,7 @@ def reorder_vocabulary(pos_tweets, neg_tweets, test_tweets, vocabulary, word_emb
 
     # Update word_embeddings to match the new order of words
     new_word_to_embedding = {word: word_embeddings[vocabulary.index(word)] for word in sorted_vocabulary}
-    if save_to_csv: 
+    if save_to_csv:
         save_to_csv_vocabulary(sorted_vocabulary, counts, 'temp_data/vocabulary_counts.csv')
 
     return sorted_vocabulary, new_word_to_embedding
