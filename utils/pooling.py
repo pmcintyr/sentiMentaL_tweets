@@ -65,7 +65,7 @@ def weighted_average_word_vectors(tweet, word_to_embedding, weight_, vocabulary)
     return np.average(vectors, axis=0, weights=weights) # Return the weighted average
 
 
-def get_features(pooling_method, train_tweets_pos, train_tweets_neg, test_tweets, word_to_embedding, vocabulary):
+def get_features(pooling_method, train_tweets_pos, train_tweets_neg, test_tweets, word_to_embedding, vocabulary, clean_data_again):
     if pooling_method == "mean" :
         train_tweets = np.concatenate((train_tweets_pos, train_tweets_neg), axis=0)
         # Construct feature representations for training tweets
@@ -99,7 +99,7 @@ def get_features(pooling_method, train_tweets_pos, train_tweets_neg, test_tweets
         test_features = all_features[len(train_tweets):]
         
     elif pooling_method == "weigth":
-        weights = vm.calculate_weights(train_tweets_pos, train_tweets_neg, vocabulary)
+        weights = vm.calculate_weights(train_tweets_pos, train_tweets_neg, vocabulary, clean_data_again)
         train_tweets = np.concatenate((train_tweets_pos, train_tweets_neg))
         all_features = []
         all_tweets = np.concatenate((train_tweets, test_tweets))
