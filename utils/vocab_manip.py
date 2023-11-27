@@ -63,8 +63,12 @@ def reorder_vocabulary(pos_tweets, neg_tweets, test_tweets, vocabulary, word_emb
             for count in counts:
                 file.write(str(count) + '\n')
 
-        # Save new_word_to_embedding
-        np.savez('processed_data/word_embeddings.npz', **new_word_to_embedding)
+        # Save new_word_to_embedding to a .txt file
+        with open('processed_data/word_embeddings.txt', 'w', encoding='utf-8') as file:
+            for word, embedding in new_word_to_embedding.items():
+                embedding_str = ' '.join(map(str, embedding))
+                file.write(f"{word} {embedding_str}\n")
+
 
 
     else :
@@ -77,9 +81,15 @@ def reorder_vocabulary(pos_tweets, neg_tweets, test_tweets, vocabulary, word_emb
         with open('processed_data/counts.txt', 'r', encoding='utf-8') as file:
             counts = [int(line.strip()) for line in file]
 
-        # Reload new_word_to_embedding
-        with np.load('processed_data/word_embeddings.npz') as data:
-            new_word_to_embedding = {word: data[word] for word in data.files}
+        # Load new_word_to_embedding from a .txt file
+        new_word_to_embedding = {}
+        with open('processed_data/word_embeddings.txt', 'r', encoding='utf-8') as file:
+            for line in file:
+                parts = line.strip().split()
+                word = parts[0]
+                embedding = [float(val) for val in parts[1:]]
+                new_word_to_embedding[word] = embedding
+
 
 
         
