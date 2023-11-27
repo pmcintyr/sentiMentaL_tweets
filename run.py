@@ -95,19 +95,19 @@ X_train, X_val, y_train, y_val = train_test_split(train_features, labels, test_s
 #-----------------------------------------------------------------------------------------------------#
 ####### MODELS #######
 
-### TRAINING LOGISTIC REGRESSION
+### LOGISTIC REGRESSION
 # Initialize and train the model
 model = LogisticRegression()
 model.fit(X_train, y_train)
 
-### TRAINING SVM
+### SUPPORT VECTOR MACHINE
 # Standardize features (important for SGD)
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_val)
 
 # Create an SGDClassifier with a linear SVM loss
-svm_classifier = SGDClassifier(loss='hinge', alpha=0.0001, max_iter=100, random_state=42, learning_rate='optimal', eta0=0.0, early_stopping=True, n_iter_no_change=5)
+model = SGDClassifier(loss='hinge', alpha=0.0001, max_iter=100, random_state=42, learning_rate='optimal', eta0=0.0, early_stopping=True, n_iter_no_change=5)
 model.fit(X_train, y_train)
 
 #-----------------------------------------------------------------------------------------------------#
@@ -118,7 +118,6 @@ y_pred = model.predict(X_val)
 accuracy = accuracy_score(y_val, y_pred)
 print(f"Validation Accuracy: {accuracy}")
 
-### LOGISTIC REGRESSION PREDICTIONS
 # Make predictions
 y_test_pred = model.predict(test_features)
 print(y_test_pred)
