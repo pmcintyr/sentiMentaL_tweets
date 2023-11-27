@@ -3,8 +3,11 @@
 import numpy as np
 import csv
 from sklearn.model_selection import train_test_split
+from sklearn import svm
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import SGDClassifier
 # !pip install scikit-learn
 
 test_data_path = 'twitter-datasets/test_data.txt'
@@ -82,35 +85,49 @@ def get_test_ids(path):
         lines[rowidx] = lines[rowidx][:index]
     return lines
 
-### TRAINING THE LINEAR CLASSIFIER
-
-# Construct feature representations for training tweets
+# Construct feature representations for training and testing tweets
 train_features = [average_word_vectors(tweet, word_to_embedding) for tweet in train_tweets]
+test_features = [average_word_vectors(tweet, word_to_embedding) for tweet in test_tweets]
 
 # Split the data into training and validation sets
 X_train, X_val, y_train, y_val = train_test_split(train_features, labels, test_size=0.1, random_state=42)
 
+#-----------------------------------------------------------------------------------------------------#
+####### MODELS #######
+
+### LOGISTIC REGRESSION
 # Initialize and train the model
 model = LogisticRegression()
 model.fit(X_train, y_train)
+
+### SUPPORT VECTOR MACHINE
+# Standardize features (important for SGD)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_val)
+
+# Create an SGDClassifier with a linear SVM loss
+model = SGDClassifier(loss='hinge', alpha=0.0001, max_iter=100, random_state=42, learning_rate='optimal', eta0=0.0, early_stopping=True, n_iter_no_change=5)
+model.fit(X_train, y_train)
+
+#-----------------------------------------------------------------------------------------------------#
+### VALIDATION & PREDICTIONS ###
 
 # Validate
 y_pred = model.predict(X_val)
 accuracy = accuracy_score(y_val, y_pred)
 print(f"Validation Accuracy: {accuracy}")
 
-### LINEAR CLASSIFIER PREDICTIONS
-
-# Construct feature representations for test tweets
-test_features = [average_word_vectors(tweet, word_to_embedding) for tweet in test_tweets]
-
 # Make predictions
 y_test_pred = model.predict(test_features)
-ids_test = get_test_ids(test_data_path)
 print(y_test_pred)
 
+#-----------------------------------------------------------------------------------------------------#
+### CREATE CSV SUBMISSION ###
+
+ids_test = get_test_ids(test_data_path)
 y_pred = []
 y_pred = y_test_pred
 y_pred[y_pred <= 0] = -1
 y_pred[y_pred > 0] = 1
-create_csv_submission(ids_test, y_pred, "submission.csv")
+create_csv_submission(ids_test, y_pred, "submission_svm.csv")
