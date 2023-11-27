@@ -8,7 +8,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import SGDClassifier
-# !pip install scikit-learn
+
+from sklearn.preprocessing import LabelEncoder
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, LSTM, Dense
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
 
 vocab_cut_path = 'processed_vocab_cut.txt'
 embedding_path = 'processed_embeddings.npy'
@@ -94,7 +100,7 @@ train_features = [average_word_vectors(tweet, word_to_embedding) for tweet in tr
 test_features = [average_word_vectors(tweet, word_to_embedding) for tweet in test_tweets]
 
 # Split the data into training and validation sets
-X_train, X_val, y_train, y_val = train_test_split(train_features, labels, test_size=0.1, random_state=42)
+# X_train, X_val, y_train, y_val = train_test_split(train_features, labels, test_size=0.1, random_state=42)
 
 #-----------------------------------------------------------------------------------------------------#
 ####### MODELS #######
@@ -104,26 +110,57 @@ X_train, X_val, y_train, y_val = train_test_split(train_features, labels, test_s
 # model = LogisticRegression()
 # model.fit(X_train, y_train)
 
-### SUPPORT VECTOR MACHINE
-# Standardize features (important for SGD)
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_val)
+# ### SUPPORT VECTOR MACHINE
+# # Standardize features (important for SGD)
+# scaler = StandardScaler()
+# X_train = scaler.fit_transform(X_train)
+# X_test = scaler.transform(X_val)
 
-# Create an SGDClassifier with a linear SVM loss
-model = SGDClassifier(loss='hinge', alpha=0.0001, max_iter=100, random_state=42, learning_rate='optimal', eta0=0.0, early_stopping=True, n_iter_no_change=5)
-model.fit(X_train, y_train)
+# # Create an SGDClassifier with a linear SVM loss
+# model = SGDClassifier(loss='hinge', alpha=0.0001, max_iter=100, random_state=42, learning_rate='optimal', eta0=0.0, early_stopping=True, n_iter_no_change=5)
+# model.fit(X_train, y_train)
+
+# ### NEURAL NET
+# # Assuming you have preprocessed data and embeddings
+# X = np.array(train_features)  # Replace with your embedded sentences
+# y = np.array(labels)  # Replace with your sentiment labels
+# test_features = np.array(test_features)
+
+# # Encode labels
+# label_encoder = LabelEncoder()
+# y = label_encoder.fit_transform(y)
+
+# # Split the data into training and testing sets
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# print(X_train)
+
+# # Build a simple feedforward neural network
+# model = Sequential()
+# model.add(Dense(100, input_dim=X_train.shape[1], activation='relu'))
+# model.add(Dense(1, activation='sigmoid'))
+# model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+# # Train the model
+# model.fit(X_train, y_train, epochs=25, batch_size=64, validation_split=0.1)
+
+# # Evaluate the model
+# y_pred = (model.predict(X_test) > 0.5).astype("int32")  # Convert probabilities to binary predictions
+# accuracy = accuracy_score(y_test, y_pred)
+# print(f'Accuracy: {accuracy * 100:.2f}%')
+
+# y_test_pred = (model.predict(test_features) > 0.5).astype("int32")
 
 #-----------------------------------------------------------------------------------------------------#
 ### VALIDATION & PREDICTIONS ###
 
-# Validate
-y_pred = model.predict(X_val)
-accuracy = accuracy_score(y_val, y_pred)
-print(f"Validation Accuracy: {accuracy}")
+# # Validate
+# y_pred = model.predict(X_val)
+# accuracy = accuracy_score(y_val, y_pred)
+# print(f"Validation Accuracy: {accuracy}")
 
 # Make predictions
-y_test_pred = model.predict(test_features)
+# y_test_pred = model.predict(test_features)
 
 #-----------------------------------------------------------------------------------------------------#
 ### CREATE CSV SUBMISSION ###
@@ -133,4 +170,4 @@ y_pred = []
 y_pred = y_test_pred
 y_pred[y_pred <= 0] = -1
 y_pred[y_pred > 0] = 1
-create_csv_submission(ids_test, y_pred, "submission_log.csv")
+create_csv_submission(ids_test, y_pred, "submission_dense.csv")
