@@ -10,32 +10,36 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import SGDClassifier
 # !pip install scikit-learn
 
-test_data_path = 'twitter-datasets/test_data.txt'
+vocab_cut_path = 'processed_vocab_cut.txt'
+embedding_path = 'processed_embeddings.npy'
+test_data_path = 'twitter-datasets/processed_test_data.txt'
+train_pos_path = 'twitter-datasets/processed_train_pos_full.txt'
+train_neg_path = 'twitter-datasets/processed_train_neg_full.txt'
 
 ### DATA LOADING
 
 # Load the word embeddings
-word_embeddings = np.load('embeddings.npy')
+word_embeddings = np.load(embedding_path)
 
 # Load the test set tweets
-with open('twitter-datasets/test_data.txt', 'r', encoding='utf-8') as file:
+with open(test_data_path, 'r', encoding='utf-8') as file:
     test_tweets = file.readlines()
 
 # Load the vocabulary
-with open('vocab_cut.txt', 'r', encoding='utf-8') as file:
+with open(vocab_cut_path, 'r', encoding='utf-8') as file:
     vocabulary = file.read().splitlines()
 
 # Create a dictionary to map words to their corresponding embeddings
 word_to_embedding = {word: word_embeddings[i] for i, word in enumerate(vocabulary)}
 
 # Load positive training tweets and assign labels
-with open('twitter-datasets/train_pos_full.txt', 'r', encoding='utf-8') as file:
+with open(train_pos_path, 'r', encoding='utf-8') as file:
     pos_tweets = file.readlines()
 
 pos_labels = np.ones(len(pos_tweets), dtype=int)  # Assign label 1 for positive tweets
 
 # Load negative training tweets and assign labels
-with open('twitter-datasets/train_neg_full.txt', 'r', encoding='utf-8') as file:
+with open(train_neg_path, 'r', encoding='utf-8') as file:
     neg_tweets = file.readlines()
 
 neg_labels = -1 * np.ones(len(neg_tweets), dtype=int)  # Assign label -1 for negative tweets
@@ -95,10 +99,10 @@ X_train, X_val, y_train, y_val = train_test_split(train_features, labels, test_s
 #-----------------------------------------------------------------------------------------------------#
 ####### MODELS #######
 
-### LOGISTIC REGRESSION
-# Initialize and train the model
-model = LogisticRegression()
-model.fit(X_train, y_train)
+# ### LOGISTIC REGRESSION
+# # Initialize and train the model
+# model = LogisticRegression()
+# model.fit(X_train, y_train)
 
 ### SUPPORT VECTOR MACHINE
 # Standardize features (important for SGD)
@@ -120,14 +124,13 @@ print(f"Validation Accuracy: {accuracy}")
 
 # Make predictions
 y_test_pred = model.predict(test_features)
-print(y_test_pred)
 
 #-----------------------------------------------------------------------------------------------------#
 ### CREATE CSV SUBMISSION ###
 
-ids_test = get_test_ids(test_data_path)
+ids_test = get_test_ids('twitter-datasets/test_data.txt')
 y_pred = []
 y_pred = y_test_pred
 y_pred[y_pred <= 0] = -1
 y_pred[y_pred > 0] = 1
-create_csv_submission(ids_test, y_pred, "submission_svm.csv")
+create_csv_submission(ids_test, y_pred, "submission_log.csv")
