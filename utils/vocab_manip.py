@@ -1,6 +1,9 @@
 import re
 import csv
 import numpy as np
+import pandas as pd
+import multiprocessing
+
 
 
 def remove_single_and_double_letters(train_tweets, test_tweets):
@@ -143,10 +146,15 @@ def calculate_weights(text_pos, text_neg , vocabulary, clean_data_again):
             word_ratio[word] = scaled_ratios[i]
 
             
-        # Save the scaled dictionary to a text file
-        with open("temp_data/word_ratios.txt", "w",encoding='utf-8') as file:
-            for word, ratio in word_ratio.items():
-                file.write(f"{word}: {ratio}\n")
+        # Save the scaled dictionary to a Pandas DataFrame with 'word' as the index
+        df_word_ratio = pd.DataFrame({'word': list(word_ratio.keys()), 'ratio': list(word_ratio.values())})
+        df_word_ratio = df_word_ratio.set_index('word')
+
+        # Save the DataFrame to a text file
+        df_word_ratio.to_csv('temp_data/word_ratios_descending.csv')
+
+
+
                 
         np.savetxt("temp_data/weights.txt", scaled_ratios)
     
@@ -157,22 +165,47 @@ def calculate_weights(text_pos, text_neg , vocabulary, clean_data_again):
 
 
 
-def out_of_vocab_file(pos_tweets, neg_tweets, test_tweets, vocabulary, clean_data_again):
+# def out_of_vocab_file(pos_tweets, neg_tweets, test_tweets, vocabulary, clean_data_again):
     
-    if clean_data_again:
-        train_tweets = np.concatenate((pos_tweets, neg_tweets), axis=0)
-        all_tweets = np.concatenate((train_tweets, test_tweets), axis=0)
-        # Initialize a list to store the out-of-vocabulary words
-        out_of_vocab_words = []
-        for tweet in all_tweets:
-            # Tokenize the tweet into words (assuming space-separated words)
-            words = tweet.split()
-            for word in words:
-                # Check if the word is not in the vocabulary
-                if word not in vocabulary:
-                    out_of_vocab_words.append(word)
+#     if clean_data_again:
+#         train_tweets = np.concatenate((pos_tweets, neg_tweets), axis=0)
+#         all_tweets = np.concatenate((train_tweets, test_tweets), axis=0)
+#         # Initialize a list to store the out-of-vocabulary words
+#         out_of_vocab_words = []
+#         for tweet in all_tweets:
+#             # Tokenize the tweet into words (assuming space-separated words)
+#             words = tweet.split()
+#             for word in words:
+#                 # Check if the word is not in the vocabulary
+#                 if word not in vocabulary:
+#                     out_of_vocab_words.append(word)
 
-        # Save the out-of-vocabulary words to a text file
+#         # Save the out-of-vocabulary words to a text file
+#         with open('temp_data/out_of_vocab_words.txt', 'w', encoding='utf-8') as file:
+#             for word in out_of_vocab_words:
+#                 file.write(word + '\n')
+                
+
+
+def find_out_of_vocab_words(tweets, vocabulary):
+    # Find and return out-of-vocabulary words in the given tweets
+    out_of_vocab_words = set(word for tweet in tweets for word in tweet.split() if word not in vocabulary)
+    return out_of_vocab_words
+
+def out_of_vocab_file(pos_tweets, neg_tweets, test_tweets, vocabulary, clean_data_again):
+    if clean_data_again:
+        # Create a multiprocessing pool with 3 workers
+        with multiprocessing.Pool(3) as pool:
+            # Map each tweet dataset to its processor
+            results = pool.starmap(find_out_of_vocab_words, [
+                (pos_tweets, vocabulary),
+                (neg_tweets, vocabulary),
+                (test_tweets, vocabulary)
+            ])
+
+        # Combine results from all three processors
+        combined_out_of_vocab_words = set().union(*results)
+
+        # Write the combined unique words to a file
         with open('temp_data/out_of_vocab_words.txt', 'w', encoding='utf-8') as file:
-            for word in out_of_vocab_words:
-                file.write(word + '\n')
+            file.writelines(word + '\n' for word in combined_out_of_vocab_words)
