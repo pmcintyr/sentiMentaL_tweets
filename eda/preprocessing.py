@@ -45,10 +45,10 @@ def preprocess_tweet(tweet):
 # print("Processed tweet:", processed_tweet)
 
 # Load positive training tweets and assign labels
-with open('../twitter-datasets/train_pos_full.txt', 'r', encoding='utf-8') as file:
+with open('../twitter-datasets/train_pos.txt', 'r', encoding='utf-8') as file:
     pos_tweets = file.readlines()
 
-with open('../twitter-datasets/train_neg_full.txt', 'r', encoding='utf-8') as file:
+with open('../twitter-datasets/train_neg.txt', 'r', encoding='utf-8') as file:
     neg_tweets = file.readlines()
 
 with open('../twitter-datasets/test_data.txt', 'r', encoding='utf-8') as file:
@@ -63,8 +63,8 @@ for pos_tweet, neg_tweet, test_tweet in zip(pos_tweets, neg_tweets, test_tweets)
     processed_test_tweets.append(preprocess_tweet(test_tweet))
 
 # save to files
-pos_file_path = '../twitter-datasets/processed_train_pos_full.txt'
-neg_file_path = '../twitter-datasets/processed_train_neg_full.txt'
+pos_file_path = '../twitter-datasets/processed_train_pos.txt'
+neg_file_path = '../twitter-datasets/processed_train_neg.txt'
 test_file_path = '../twitter-datasets/processed_test_data.txt'
 
 with open(pos_file_path, 'w', encoding='utf-8') as file:
