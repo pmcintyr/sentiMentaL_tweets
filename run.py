@@ -15,6 +15,10 @@ from tensorflow.keras.layers import Embedding, LSTM, Dense
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+
 
 vocab_cut_path = 'processed_vocab_cut.txt'
 embedding_path = 'processed_embeddings.npy'
@@ -99,6 +103,7 @@ def get_test_ids(path):
 train_features = [average_word_vectors(tweet, word_to_embedding) for tweet in train_tweets]
 test_features = [average_word_vectors(tweet, word_to_embedding) for tweet in test_tweets]
 
+
 # Split the data into training and validation sets
 # X_train, X_val, y_train, y_val = train_test_split(train_features, labels, test_size=0.1, random_state=42)
 
@@ -165,9 +170,9 @@ test_features = [average_word_vectors(tweet, word_to_embedding) for tweet in tes
 #-----------------------------------------------------------------------------------------------------#
 ### CREATE CSV SUBMISSION ###
 
-ids_test = get_test_ids('twitter-datasets/test_data.txt')
-y_pred = []
-y_pred = y_test_pred
-y_pred[y_pred <= 0] = -1
-y_pred[y_pred > 0] = 1
-create_csv_submission(ids_test, y_pred, "submission_dense.csv")
+# ids_test = get_test_ids('twitter-datasets/test_data.txt')
+# y_pred = []
+# y_pred = y_test_pred
+# y_pred[y_pred <= 0] = -1
+# y_pred[y_pred > 0] = 1
+# create_csv_submission(ids_test, y_pred, "submission_dense.csv")
