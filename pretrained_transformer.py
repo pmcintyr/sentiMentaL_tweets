@@ -61,7 +61,7 @@ tweets = test_tweets
 labels = np.concatenate((pos_labels, neg_labels), axis=0)
 
 
-pipe = pipeline("text-classification")
+pipe = pipeline("sentiment-analysis")
 result = []
 for tweet in tweets:
     result.append(pipe(tweet)[0]['label'])

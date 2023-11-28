@@ -122,7 +122,7 @@ with torch.no_grad():
         logits = model(inputs)
 
         # Convert logits to probabilities using softmax
-        probabilities = torch.nn.functional.softmax(outputs.logits, dim=1)
+        probabilities = torch.nn.functional.softmax(logits.logits, dim=1)
 
         # Get the predicted class (index with the maximum probability)
         _, predicted_class = torch.max(probabilities, 1)
@@ -136,6 +136,9 @@ all_predictions = np.array(all_predictions)
 # Calculate accuracy
 accuracy = accuracy_score(test_labels.cpu().numpy(), all_predictions)
 print(f"Validation Accuracy: {accuracy}")
+
+#-----------------------------------------------------------------------------------------------------#
+### PREDICTION ###
 
 # Make predictions
 y_test_pred = all_predictions
