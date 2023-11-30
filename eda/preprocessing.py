@@ -11,6 +11,9 @@ from nltk.tokenize import TweetTokenizer
 from nltk.stem import PorterStemmer
 from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
+
+import subprocess
+import sys
 from symspellpy import SymSpell
 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -142,4 +145,5 @@ def main(argv):
         data[column].to_csv(file_name, index=False, header=False)
 
 if __name__ == "__main__":
+   print(sys.argv[1:])
    main(sys.argv[1:])

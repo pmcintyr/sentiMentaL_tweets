@@ -6,6 +6,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, AdamW
+# install tensorflow and keras
+import tensorflow
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 def get_test_ids(path):
@@ -75,6 +77,7 @@ train_tweets, val_tweets, train_labels, val_labels = train_test_split(tweets, la
 # Load pre-trained DistilBERT tokenizer
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
 model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2)  # Assuming binary classification
+print(model)
 
 # Tokenize and encode tweets for training set   
 train_input_ids = [tokenizer.encode(tweet, add_special_tokens=True, max_length=512) for tweet in train_tweets]
@@ -95,7 +98,7 @@ dataset = TensorDataset(train_input_ids, torch.tensor(train_labels))
 dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
 # Set up optimizer and loss function
-optimizer = AdamW(model.parameters(), lr=1e-5)
+optimizer = AdamW(model.parameters(), lr=1e-6)
 criterion = torch.nn.CrossEntropyLoss()
 
 print("start fine-tune")
