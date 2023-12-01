@@ -51,78 +51,6 @@ def remove_hashtags(train_tweets, test_tweets, vocabulary):
     return
 
 
-# def process_tweets_hashtags(train_tweets_pos, train_tweets_neg, test_tweets, vocabulary, clean_data_again):
-#     if clean_data_again:
-#         processed_train_tweets_pos = []
-#         hashtag_regex = re.compile(r"#\w+")
-
-        
-#         for tweet in train_tweets_pos:
-#             hashtags = hashtag_regex.findall(tweet)
-#             processed_tweet = tweet
-
-#             for hashtag in hashtags:
-#                 split_words = split_hashtag(hashtag, vocabulary=vocabulary)
-#                 processed_tweet = processed_tweet.replace(hashtag, ' '.join(split_words))
-
-#             processed_train_tweets_pos.append(processed_tweet)
-            
-#         processed_train_tweets_neg = []
-        
-#         for tweet in train_tweets_neg:
-#             hashtags = hashtag_regex.findall(tweet)
-#             processed_tweet = tweet
-
-#             for hashtag in hashtags:
-#                 split_words = split_hashtag(hashtag, vocabulary=vocabulary)
-#                 processed_tweet = processed_tweet.replace(hashtag, ' '.join(split_words))
-
-#             processed_train_tweets_neg.append(processed_tweet)
-            
-#         processed_test_tweets = []
-        
-#         for tweet in test_tweets:
-#             hashtags = hashtag_regex.findall(tweet)
-#             processed_tweet = tweet
-
-#             for hashtag in hashtags:
-#                 split_words = split_hashtag(hashtag, vocabulary=vocabulary)
-#                 processed_tweet = processed_tweet.replace(hashtag, ' '.join(split_words))
-
-#             processed_test_tweets.append(processed_tweet)
-            
-#         # Write the contents into a new file
-#         with open('processed_data/train_pos.txt', 'w', encoding='utf-8') as file:
-#             file.writelines(processed_train_tweets_pos)
-            
-#         with open('processed_data/train_neg.txt', 'w', encoding='utf-8') as file:
-#             file.writelines(processed_train_tweets_neg)
-            
-#         with open('processed_data/test_data.txt', 'w', encoding='utf-8') as file:
-#             file.writelines(processed_test_tweets)
-                    
-#     else:
-        
-#         # Load the processed data
-#         with open('processed_data/train_pos.txt', 'r', encoding='utf-8') as file:
-#             processed_train_tweets_pos = file.readlines()
-            
-#         with open('processed_data/train_neg.txt', 'r', encoding='utf-8') as file:
-#             processed_train_tweets_neg = file.readlines()
-            
-#         with open('processed_data/test_data.txt', 'r', encoding='utf-8') as file:
-#             processed_test_tweets = file.readlines()
-        
-    
-#     return processed_train_tweets_pos, processed_train_tweets_neg, processed_test_tweets
-
-
-
-
-
-
-
-
 
 
 def process_tweet(tweet, vocabulary):
@@ -150,24 +78,24 @@ def process_tweets_hashtags(train_tweets_pos, train_tweets_neg, test_tweets, voc
 
         # Write the contents into files
                # Write the contents into a new file
-        with open('processed_data/train_pos.txt', 'w', encoding='utf-8') as file:
+        with open('../processed_data/process_tweets_hashtags_train_pos.txt', 'w', encoding='utf-8') as file:
             file.writelines(processed_train_tweets_pos)
             
-        with open('processed_data/train_neg.txt', 'w', encoding='utf-8') as file:
+        with open('../processed_data/process_tweets_hashtags_train_neg.txt', 'w', encoding='utf-8') as file:
             file.writelines(processed_train_tweets_neg)
             
-        with open('processed_data/test_data.txt', 'w', encoding='utf-8') as file:
+        with open('../processed_data/process_tweets_hashtags_test_data.txt', 'w', encoding='utf-8') as file:
             file.writelines(processed_test_tweets)
 
     else:
         # Load the processed data
-        with open('processed_data/train_pos.txt', 'r', encoding='utf-8') as file:
+        with open('../processed_data/process_tweets_hashtags_train_pos.txt', 'r', encoding='utf-8') as file:
             processed_train_tweets_pos = file.readlines()
             
-        with open('processed_data/train_neg.txt', 'r', encoding='utf-8') as file:
+        with open('../processed_data/process_tweets_hashtags_train_neg.txt', 'r', encoding='utf-8') as file:
             processed_train_tweets_neg = file.readlines()
             
-        with open('processed_data/test_data.txt', 'r', encoding='utf-8') as file:
+        with open('../processed_data/process_tweets_hashtags_test_data.txt', 'r', encoding='utf-8') as file:
             processed_test_tweets = file.readlines()
 
     return processed_train_tweets_pos, processed_train_tweets_neg, processed_test_tweets

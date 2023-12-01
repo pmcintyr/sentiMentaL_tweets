@@ -57,17 +57,17 @@ def reorder_vocabulary(pos_tweets, neg_tweets, test_tweets, vocabulary, word_emb
         new_word_to_embedding = {word: word_embeddings[vocabulary.index(word)] for word in sorted_vocabulary}
         
         # Save sorted_vocabulary
-        with open('processed_data/sorted_vocabulary.txt', 'w', encoding='utf-8') as file:
+        with open('../processed_data/sorted_vocabulary_by_occurences.txt', 'w', encoding='utf-8') as file:
             for word in sorted_vocabulary:
                 file.write(word + '\n')
 
         # Save counts
-        with open('processed_data/counts.txt', 'w', encoding='utf-8') as file:
+        with open('../processed_data/words_counts_sorted_from_vocab.txt', 'w', encoding='utf-8') as file:
             for count in counts:
                 file.write(str(count) + '\n')
 
         # Save new_word_to_embedding to a .txt file
-        with open('processed_data/word_embeddings.txt', 'w', encoding='utf-8') as file:
+        with open('../processed_data/word_embeddings_sorted_by_occurences.txt', 'w', encoding='utf-8') as file:
             for word, embedding in new_word_to_embedding.items():
                 embedding_str = ' '.join(map(str, embedding))
                 file.write(f"{word} {embedding_str}\n")
@@ -77,16 +77,16 @@ def reorder_vocabulary(pos_tweets, neg_tweets, test_tweets, vocabulary, word_emb
     else :
         
         # Reload sorted_vocabulary
-        with open('processed_data/sorted_vocabulary.txt', 'r', encoding='utf-8') as file:
+        with open('../processed_data/sorted_vocabulary_by_occurences.txt', 'r', encoding='utf-8') as file:
             sorted_vocabulary = [line.strip() for line in file]
 
         # Reload counts
-        with open('processed_data/counts.txt', 'r', encoding='utf-8') as file:
+        with open('../processed_data/words_counts_sorted_from_vocab.txt', 'r', encoding='utf-8') as file:
             counts = [int(line.strip()) for line in file]
 
         # Load new_word_to_embedding from a .txt file
         new_word_to_embedding = {}
-        with open('processed_data/word_embeddings.txt', 'r', encoding='utf-8') as file:
+        with open('../processed_data/word_embeddings_sorted_by_occurences.txt', 'r', encoding='utf-8') as file:
             for line in file:
                 parts = line.strip().split()
                 word = parts[0]
@@ -97,7 +97,7 @@ def reorder_vocabulary(pos_tweets, neg_tweets, test_tweets, vocabulary, word_emb
 
         
     if save_counts:
-        save_to_csv_vocabulary(sorted_vocabulary, counts, 'temp_data/vocabulary_counts.csv')
+        save_to_csv_vocabulary(sorted_vocabulary, counts, '../processed_data/vocabulary_counts.csv')
 
     return sorted_vocabulary, new_word_to_embedding
 
@@ -151,40 +151,19 @@ def calculate_weights(text_pos, text_neg , vocabulary, clean_data_again):
         df_word_ratio = df_word_ratio.set_index('word')
 
         # Save the DataFrame to a text file
-        df_word_ratio.to_csv('temp_data/word_ratios_descending.csv')
+        df_word_ratio.to_csv('../processed_data/word_ratios_descending.csv')
 
 
 
                 
-        np.savetxt("temp_data/weights.txt", scaled_ratios)
+        np.savetxt("../processed_data/word_ratios_descending.txt", scaled_ratios)
     
     else:
-        scaled_ratios = np.loadtxt("temp_data/weights.txt")
+        scaled_ratios = np.loadtxt("../processed_data/word_ratios_descending.txt")
 
     return scaled_ratios
 
 
-
-# def out_of_vocab_file(pos_tweets, neg_tweets, test_tweets, vocabulary, clean_data_again):
-    
-#     if clean_data_again:
-#         train_tweets = np.concatenate((pos_tweets, neg_tweets), axis=0)
-#         all_tweets = np.concatenate((train_tweets, test_tweets), axis=0)
-#         # Initialize a list to store the out-of-vocabulary words
-#         out_of_vocab_words = []
-#         for tweet in all_tweets:
-#             # Tokenize the tweet into words (assuming space-separated words)
-#             words = tweet.split()
-#             for word in words:
-#                 # Check if the word is not in the vocabulary
-#                 if word not in vocabulary:
-#                     out_of_vocab_words.append(word)
-
-#         # Save the out-of-vocabulary words to a text file
-#         with open('temp_data/out_of_vocab_words.txt', 'w', encoding='utf-8') as file:
-#             for word in out_of_vocab_words:
-#                 file.write(word + '\n')
-                
 
 
 def find_out_of_vocab_words(tweets, vocabulary):
@@ -207,5 +186,5 @@ def out_of_vocab_file(pos_tweets, neg_tweets, test_tweets, vocabulary, clean_dat
         combined_out_of_vocab_words = set().union(*results)
 
         # Write the combined unique words to a file
-        with open('temp_data/out_of_vocab_words.txt', 'w', encoding='utf-8') as file:
+        with open('../processed_data/out_of_vocab_words.txt', 'w', encoding='utf-8') as file:
             file.writelines(word + '\n' for word in combined_out_of_vocab_words)

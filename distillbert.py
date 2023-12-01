@@ -6,6 +6,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, AdamW
+import tensorflow
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 def get_test_ids(path):
@@ -28,32 +29,8 @@ def create_csv_submission(ids, y_pred, name):
         for r1, r2 in zip(ids, y_pred):
             writer.writerow({"Id": int(r1), "Prediction": int(r2)})
 
-test_data_path = 'twitter-datasets/processed_test_data.txt'
-train_pos_path = 'twitter-datasets/processed_train_pos.txt'
-train_neg_path = 'twitter-datasets/processed_train_neg.txt'
-
 train_path = 'twitter-datasets/processed_train.csv'
 test_path = 'twitter-datasets/processed_test.csv'
-
-# Load the test set tweets
-# with open(test_data_path, 'r', encoding='utf-8') as file:
-#     test_tweets = file.readlines()
-
-# # Load positive training tweets and assign labels
-# with open(train_pos_path, 'r', encoding='utf-8') as file:
-#     pos_tweets = file.readlines()
-
-# pos_labels = np.ones(len(pos_tweets), dtype=int)  # Assign label 1 for positive tweets
-
-# # Load negative training tweets and assign labels
-# with open(train_neg_path, 'r', encoding='utf-8') as file:
-#     neg_tweets = file.readlines()
-
-# neg_labels = 0 * np.ones(len(neg_tweets), dtype=int)  # Assign label -1 for negative tweets
-
-# tweets = pos_tweets + neg_tweets
-# label = np.concatenate((pos_labels, neg_labels), axis=0)
-# print(type(label))
 
 train_processed = pd.read_csv(train_path)
 tweets = train_processed['text'].values
@@ -61,13 +38,7 @@ labels = train_processed['label'].values
 
 test_processed = pd.read_csv(test_path)
 test_tweets = test_processed['text'].values
-
-with open('twitter-datasets/text.txt', 'r', encoding='utf-8') as file:
-    tweets = file.readlines()
-
-# Load positive training tweets and assign labels
-with open('twitter-datasets/label.txt', 'r', encoding='utf-8') as file:
-    labels = file.readlines()
+test_ids = test_processed['ids'].values
 
 labels = np.array([float(value.strip()) for value in labels if value.strip() != ''], dtype=np.float64)
 labels = labels.astype(int)
@@ -162,29 +133,20 @@ print(f"Validation Accuracy: {accuracy}")
 
 #-----------------------------------------------------------------------------------------------------#
 ### PREDICTION ###
-
-# Set the model to evaluation mode
 model.eval()
 
-# Forward pass to get logits
 with torch.no_grad():
     outputs = model(test_input_ids)
 
-# Convert logits to probabilities using softmax
 probabilities = torch.nn.functional.softmax(outputs.logits, dim=1)
-
-# Get the predicted class (index with the maximum probability)
 _, predicted_class = torch.max(probabilities, 1)
-
-# Convert the result to a numpy array
 predictions = predicted_class.cpu().numpy()
 
 #-----------------------------------------------------------------------------------------------------#
 ### CREATE CSV SUBMISSION ###
 
-ids_test = get_test_ids('twitter-datasets/test_data.txt')
 y_pred = []
 y_pred = predictions
 y_pred[y_pred <= 0] = -1
 y_pred[y_pred > 0] = 1
-create_csv_submission(ids_test, y_pred, "submission_dbert_20.csv")
+create_csv_submission(test_ids, y_pred, "submission_dbert_20.csv")
