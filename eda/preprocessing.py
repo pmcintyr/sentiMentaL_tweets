@@ -90,7 +90,8 @@ def hashtag():
     data['text'] = data['text'].apply(lambda text: text.strip())
 
 def remove_tags():
-    data['text'] = data['text'].str.replace('<[\w]*>', '')
+    data['text'] = data['text'].apply(
+      lambda text: str(re.sub(r'[\<].*?[\>]', '', text)))
     data['text'] = data['text'].apply(lambda text: text.strip())
     data['text'] = data['text'].str.replace('\.{3}$', '')
 
@@ -156,20 +157,13 @@ def main(argv):
         spacing()
 
     data = data.sample(frac=1)
+
     if dataset == 'train':
         data.to_csv('../twitter-datasets/processed_train.csv', index=False)
     elif dataset == 'train_full':
         data.to_csv('../twitter-datasets/processed_train_full.csv', index=False)
-    else:
+    elif dataset == 'test':
         data.to_csv('../twitter-datasets/processed_test.csv', index=False)
-
-    # Save each column as a text file
-    # for column in data.columns:
-    #     # Construct the file name (you can customize this as needed)
-    #     file_name = f"../twitter-datasets/{column}.txt"
-
-    #     # Save the column to a text file
-    #     data[column].to_csv(file_name, index=False, header=False)
 
 if __name__ == "__main__":
    print(sys.argv[1:])
