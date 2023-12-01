@@ -14,7 +14,7 @@ def get_test_ids(path):
     for rowidx in range(len(lines)):
         index = lines[rowidx].index(',')
         lines[rowidx] = lines[rowidx][:index]
-    return lines
+    return lines    
 
 def create_csv_submission(ids, y_pred, name):
     # Check that y_pred only contains -1 and 1
@@ -33,10 +33,11 @@ train_pos_path = 'twitter-datasets/processed_train_pos.txt'
 train_neg_path = 'twitter-datasets/processed_train_neg.txt'
 
 train_path = 'twitter-datasets/processed_train.csv'
+test_path = 'twitter-datasets/processed_test.csv'
 
 # Load the test set tweets
-with open(test_data_path, 'r', encoding='utf-8') as file:
-    test_tweets = file.readlines()
+# with open(test_data_path, 'r', encoding='utf-8') as file:
+#     test_tweets = file.readlines()
 
 # # Load positive training tweets and assign labels
 # with open(train_pos_path, 'r', encoding='utf-8') as file:
@@ -54,9 +55,12 @@ with open(test_data_path, 'r', encoding='utf-8') as file:
 # label = np.concatenate((pos_labels, neg_labels), axis=0)
 # print(type(label))
 
-train_processed = pd.read_csv('twitter-datasets/processed_train.csv')
+train_processed = pd.read_csv(train_path)
 tweets = train_processed['text'].values
 labels = train_processed['label'].values
+
+test_processed = pd.read_csv(test_path)
+test_tweets = test_processed['text'].values
 
 with open('twitter-datasets/text.txt', 'r', encoding='utf-8') as file:
     tweets = file.readlines()
@@ -71,9 +75,8 @@ labels = labels.astype(int)
 # Split the data into training and testing sets
 train_tweets, val_tweets, train_labels, val_labels = train_test_split(tweets, labels, test_size=0.2, random_state=42)
 
-
 # Load pre-trained DistilBERT tokenizer
-tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', max_length=128, truncation=True)
 model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2)  # Assuming binary classification
 
 # Tokenize and encode tweets for training set   
