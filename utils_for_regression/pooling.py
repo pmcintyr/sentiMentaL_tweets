@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
-import utils.vocab_manip as vm
+import utils_for_regression.vocab_manip as vm
 
 
 ### DEFINE FUNCTIONS

@@ -5,7 +5,8 @@ import csv
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, AdamW
+from transformers import BertTokenizer, BertForSequenceClassification, AdamW
+import tensorflow
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 def get_test_ids(path):
@@ -28,16 +29,16 @@ def create_csv_submission(ids, y_pred, name):
         for r1, r2 in zip(ids, y_pred):
             writer.writerow({"Id": int(r1), "Prediction": int(r2)})
 
-test_data_path = 'twitter-datasets/processed_test_data.txt'
-train_pos_path = 'twitter-datasets/processed_train_pos.txt'
-train_neg_path = 'twitter-datasets/processed_train_neg.txt'
-
 train_path = 'twitter-datasets/processed_train.csv'
 test_path = 'twitter-datasets/processed_test.csv'
 
 train_processed = pd.read_csv(train_path)
 tweets = train_processed['text'].values
 labels = train_processed['label'].values
+
+test_processed = pd.read_csv(test_path)
+test_tweets = test_processed['text'].values
+test_ids = test_processed['ids'].values
 
 with open('twitter-datasets/text.txt', 'r', encoding='utf-8') as file:
     tweets = file.readlines()
@@ -53,8 +54,8 @@ labels = labels.astype(int)
 train_tweets, val_tweets, train_labels, val_labels = train_test_split(tweets, labels, test_size=0.2, random_state=42)
 
 # Load pre-trained DistilBERT tokenizer
-tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', max_length=128, truncation=True)
-model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2)  # Assuming binary classification
+tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
+model = BertForSequenceClassification.from_pretrained('bert-large-uncased', num_labels=2)  # Assuming binary classification # Assuming binary classification
 
 # Tokenize and encode tweets for training set   
 train_input_ids = [tokenizer.encode(tweet, add_special_tokens=True, max_length=512) for tweet in train_tweets]
@@ -99,7 +100,7 @@ for epoch in range(epochs):
         loss.backward()
         optimizer.step()
 
-model.save_pretrained('distilbert')
+model.save_pretrained('bert')
 
 #-----------------------------------------------------------------------------------------------------#
 ## VALIDATION & PREDICTIONS ###
@@ -139,29 +140,20 @@ print(f"Validation Accuracy: {accuracy}")
 
 #-----------------------------------------------------------------------------------------------------#
 ### PREDICTION ###
-
-# Set the model to evaluation mode
 model.eval()
 
-# Forward pass to get logits
 with torch.no_grad():
     outputs = model(test_input_ids)
 
-# Convert logits to probabilities using softmax
 probabilities = torch.nn.functional.softmax(outputs.logits, dim=1)
-
-# Get the predicted class (index with the maximum probability)
 _, predicted_class = torch.max(probabilities, 1)
-
-# Convert the result to a numpy array
 predictions = predicted_class.cpu().numpy()
 
 #-----------------------------------------------------------------------------------------------------#
 ### CREATE CSV SUBMISSION ###
 
-ids_test = get_test_ids('twitter-datasets/test_data.txt')
 y_pred = []
 y_pred = predictions
 y_pred[y_pred <= 0] = -1
 y_pred[y_pred > 0] = 1
-create_csv_submission(ids_test, y_pred, "submission_dbert_20.csv")
+create_csv_submission(test_ids, y_pred, "submission_bert_20.csv")
