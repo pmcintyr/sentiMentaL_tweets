@@ -1,7 +1,7 @@
-# sentiMentaL_tweets
-Tweet text classification for positive and negative sentiment
+# Tweet Sentiment Classification
+Tweet text classification project for positive and negative sentiment as part of the 2023 EPFL Machine Learning Course.
 
-Ideas:
-- Compare Word2Vec and Fasttext with GloVe for best word embeddings
-- Test [Vader Sentiment Analysis](https://github.com/cjhutto/vaderSentiment)
-- test [Autotrain huggingface model](https://huggingface.co/kakashi210/autotrain-tweet-sentiment-classifier-1055036381)
+## Authors
+* Junyou Li
+* Wanchai Grossrieder
+* Paul McIntyre
