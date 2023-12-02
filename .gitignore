@@ -2,3 +2,5 @@ twitter-datasets/
 .ipynb_checkpoints/
 model/
 original_word_embeddings/
+processed_data/
+submissions/
