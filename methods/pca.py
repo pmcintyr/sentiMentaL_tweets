@@ -17,10 +17,10 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
-vocab_cut_path = 'processed_vocab_cut.txt'
-embedding_path = 'processed_embeddings.npy'
-train_pos_path = 'twitter-datasets/processed_train_pos_full.txt'
-train_neg_path = 'twitter-datasets/processed_train_neg_full.txt'
+vocab_cut_path = '../word_embeddings/processed_vocab_cut.txt'
+embedding_path = '../word_embeddings/processed_embeddings.npy'
+train_pos_path = '../twitter-datasets/train_pos_full.txt'
+train_neg_path = '../twitter-datasets/train_neg_full.txt'
 
 ### DATA LOADING
 
