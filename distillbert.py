@@ -164,4 +164,4 @@ y_pred = []
 y_pred = predictions
 y_pred[y_pred <= 0] = -1
 y_pred[y_pred > 0] = 1
-create_csv_submission(ids_test, y_pred, "submission_dbert_20.csv")
+create_csv_submission(ids_test, y_pred, "submissions/submission_dbert_20.csv")
