@@ -1,7 +1,6 @@
 
 import csv
-import numpy as np  # If you're using numpy arrays
-
+import numpy as np
 
 def create_csv_submission(ids, y_pred, name):
     """

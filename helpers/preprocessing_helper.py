@@ -115,6 +115,11 @@ def spacing():
     data['text'] = data['text'].apply(lambda text: text.strip())
     data.reset_index(inplace=True, drop=True)
 
+def nltk_resource():
+    # Download the stopwords resource
+    ssl._create_default_https_context = ssl._create_unverified_context
+    nltk.download('stopwords')
+
 def main(argv):
     dataset = argv[0]
     model = argv[1]
