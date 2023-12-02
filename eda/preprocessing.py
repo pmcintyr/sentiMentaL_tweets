@@ -90,8 +90,9 @@ def hashtag():
     data['text'] = data['text'].apply(lambda text: text.strip())
 
 def remove_tags():
-    data['text'] = data['text'].apply(
-      lambda text: str(re.sub(r'[\<].*?[\>]', '', text)))
+    # data['text'] = data['text'].apply(
+    #   lambda text: str(re.sub(r'[\<].*?[\>]', '', text)))
+    data.replace(r'<.*?>', '', regex=True, inplace=True)
     data['text'] = data['text'].apply(lambda text: text.strip())
     data['text'] = data['text'].str.replace('\.{3}$', '')
 
@@ -105,7 +106,8 @@ def prune_punctuations():
     data['text'] = data['text'].replace({'[$&+=@#|<>:*()%]': ''}, regex=True)
 
 def empty():
-    data['text'] = data['text'].str.replace('^\s*$', '<EMPTY>')
+    # data['text'] = data['text'].str.replace('^\s*$', '<EMPTY>')
+    data.replace("", "<EMPTY>", inplace=True)
 
 def spacing():
     # rewrite
@@ -155,6 +157,7 @@ def main(argv):
         remove_elongs()
         prune_punctuations()
         spacing()
+        empty()
 
     data = data.sample(frac=1)
 
@@ -164,6 +167,7 @@ def main(argv):
         data.to_csv('../twitter-datasets/processed_train_full.csv', index=False)
     elif dataset == 'test':
         data.to_csv('../twitter-datasets/processed_test.csv', index=False)
+    else: print(data)
 
 if __name__ == "__main__":
    print(sys.argv[1:])

@@ -29,13 +29,8 @@ def create_csv_submission(ids, y_pred, name):
         for r1, r2 in zip(ids, y_pred):
             writer.writerow({"Id": int(r1), "Prediction": int(r2)})
 
-train_path = 'twitter-datasets/processed_train.csv'
+mps_device = torch.device("mps")
 test_path = 'twitter-datasets/processed_test.csv'
-
-train_processed = pd.read_csv(train_path)
-tweets = train_processed['text'].values
-labels = train_processed['label'].values
-
 test_processed = pd.read_csv(test_path)
 test_tweets = test_processed['text'].values
 test_ids = test_processed['ids'].values
@@ -83,8 +78,10 @@ print("start fine-tune")
 
 # Fine-tune the model
 epochs = 3
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = mps_device
+model.to(mps_device)
+print(mps_device)
 
 for epoch in range(epochs):
     print(epoch)
@@ -156,4 +153,4 @@ y_pred = []
 y_pred = predictions
 y_pred[y_pred <= 0] = -1
 y_pred[y_pred > 0] = 1
-create_csv_submission(test_ids, y_pred, "submission_bert_20.csv")
+create_csv_submission(test_ids, y_pred, "submissions/submission_bert_20.csv")
