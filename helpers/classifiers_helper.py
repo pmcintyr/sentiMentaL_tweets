@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
-import utils_for_regression.vocab_manip as vm
 import re
 import csv
 import pandas as pd
@@ -21,7 +20,7 @@ def average_word_vectors(tweet, word_to_embedding):
         return np.mean(vectors, axis=0)
     else:
         # If none of the words in the tweet are in the embeddings, return a zero vector
-        return np.zeros_like(word_embeddings[0])
+        return np.zeros_like(word_to_embedding[0])
 
 def max_word_vectors(tweet, word_to_embedding):
     # tweet is the sentence
@@ -33,10 +32,10 @@ def max_word_vectors(tweet, word_to_embedding):
         if word in word_to_embedding:
             vectors.append(word_to_embedding[word])
     if vectors:
-        return np.mean(vectors, axis=0)
+        return np.max(vectors, axis=0)
     else:
         # If none of the words in the tweet are in the embeddings, return a zero vector
-        return np.zeros_like(word_embeddings[0])
+        return np.zeros_like(word_to_embedding[0])
 
 
 def weighted_average_word_vectors(tweet, word_to_embedding, weight_, vocabulary):
@@ -48,7 +47,8 @@ def weighted_average_word_vectors(tweet, word_to_embedding, weight_, vocabulary)
         if word in word_to_embedding:
             vectors.append(word_to_embedding[word])
         else:
-            vectors.append(np.zeros_like(next(iter(word_to_embedding.values()))))
+            zero_vector = np.zeros_like(word_to_embedding[0])
+            vectors.append(zero_vector)
 
     for word in words:
         if word in vocabulary:
@@ -101,8 +101,8 @@ def get_features(pooling_method, train_tweets_pos, train_tweets_neg, test_tweets
         train_features = all_features[:len(train_tweets)]
         test_features = all_features[len(train_tweets):]
         
-    elif pooling_method == "weigth":
-        weights = vm.calculate_weights(train_tweets_pos, train_tweets_neg, vocabulary, clean_data_again)
+    elif pooling_method == "weight":
+        weights = calculate_weights(train_tweets_pos, train_tweets_neg, vocabulary, clean_data_again)
         train_tweets = np.concatenate((train_tweets_pos, train_tweets_neg))
         all_features = []
         all_tweets = np.concatenate((train_tweets, test_tweets))

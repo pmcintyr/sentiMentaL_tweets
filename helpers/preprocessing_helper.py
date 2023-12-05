@@ -53,18 +53,22 @@ def get_wordnet_tag(nltk_tag):
     else:
         return wordnet.NOUN
     
-def drop_duplicates():
+def drop_duplicates(data):
     data = data.drop_duplicates(subset=['text'])
+    return data
     
-def remove_elongs():
+def remove_elongs(data):
     data['text'] = data['text'].apply(
       lambda text: str(re.sub(r'\b(\S*?)(.)\2{3,}\b', r'\1\2\2\2', text)))
+    return data
 
-def lower_case():
+def lower_case(data):
     data['text'] = data['text'].str.lower()
+    return data
 
-def spell_correct():
+def spell_correct(data):
     data['text'] = data['text'].apply(lambda text: symspell.lookup_compound(text, max_edit_distance=2)[0].term)
+    return data
 
 def lemmatize(text):
     nltk_tagged = nltk.pos_tag(text.split())
@@ -74,20 +78,25 @@ def lemmatize(text):
       [lemmatizer.lemmatize(w, get_wordnet_tag(nltk_tag))
        for w, nltk_tag in nltk_tagged])
 
-def lemmatizer():
+def lemmatizer(data):
     data['text'] = data['text'].apply(lemmatize)
+    return data
 
-def stopword():
+def stopword(data):
     stopwords_ = set(stopwords.words('english'))
 
     data['text'] = data['text'].apply(
       lambda text: ' '.join(
         [word for word in str(text).split() if word not in stopwords_]))
     
-def hashtag():
+    return data
+    
+def hashtag(data):
     data['text'] = data['text'].apply(
       lambda text: str(re.sub(r'[\<].*?[\>]', '', text)))
     data['text'] = data['text'].apply(lambda text: text.strip())
+    
+    return data
 
 import re
 import multiprocessing
@@ -269,9 +278,9 @@ with open('../twitter-datasets/test_data.txt', 'r', encoding='utf-8') as file:
 processed_pos_tweets, processed_neg_tweets, processed_test_tweets = [], [], []
 
 for pos_tweet, neg_tweet, test_tweet in zip(pos_tweets, neg_tweets, test_tweets):
-    processed_pos_tweets.append(preprocess_tweet(pos_tweet))
-    processed_neg_tweets.append(preprocess_tweet(neg_tweet))
-    processed_test_tweets.append(preprocess_tweet(test_tweet))
+    processed_pos_tweets.append(preprocess_tweet_old(pos_tweet))
+    processed_neg_tweets.append(preprocess_tweet_old(neg_tweet))
+    processed_test_tweets.append(preprocess_tweet_old(test_tweet))
 
 # save to files
 pos_file_path = '../twitter-datasets/processed_train_pos.txt'
@@ -324,15 +333,15 @@ def main(argv):
                 data = pd.concat([data, df], ignore_index=True)
         
     if dataset == 'train' or dataset == 'train_full':
-        data = data.drop_duplicates(subset=['text'])
+        data = drop_duplicates(data)
 
     if model == 'distilbert':
-        lower_case()
-        remove_tags()
-        remove_elongs()
-        prune_punctuations()
-        spacing()
-        empty()
+        data = lower_case(data)
+        data = remove_tags(data)
+        data = remove_elongs(data)
+        data = prune_punctuations(data)
+        data = spacing(data)
+        data = empty(data)
 
     data = data.sample(frac=1)
 
