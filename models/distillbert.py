@@ -30,22 +30,28 @@ def create_csv_submission(ids, y_pred, name):
             writer.writerow({"Id": int(r1), "Prediction": int(r2)})
 
 test_path = '../twitter-datasets/processed_test.csv'
-train_tweets_path = '../twitter-datasets/text.txt'
-train_labels_path = '../twitter-datasets/label.txt'
+train_path = '../twitter-datasets/processed_train.csv'
 
-with open(train_tweets_path, 'r', encoding='utf-8') as file:
-    tweets = file.readlines()
+# train_tweets_path = '../twitter-datasets/text.txt'
+# train_labels_path = '../twitter-datasets/label.txt'
 
-# Load positive training tweets and assign labels
-with open(train_labels_path, 'r', encoding='utf-8') as file:
-    labels = file.readlines()
+# with open(train_tweets_path, 'r', encoding='utf-8') as file:
+#     tweets = file.readlines()
+
+# # Load positive training tweets and assign labels
+# with open(train_labels_path, 'r', encoding='utf-8') as file:
+#     labels = file.readlines()
+
+train_processed = pd.read_csv(train_path)
+tweets = train_processed['text'].values
+labels = train_processed['label'].values
 
 test_processed = pd.read_csv(test_path)
 test_tweets = test_processed['text'].values
 test_ids = test_processed['ids'].values
 
-labels = np.array([float(value.strip()) for value in labels if value.strip() != ''], dtype=np.float64)
-labels = labels.astype(int)
+# labels = np.array([float(value.strip()) for value in labels if value.strip() != ''], dtype=np.float64)
+# labels = labels.astype(int)
 
 # Split the data into training and testing sets
 train_tweets, val_tweets, train_labels, val_labels = train_test_split(tweets, labels, test_size=0.2, random_state=42)
@@ -55,17 +61,17 @@ tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased', max_l
 model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2)  # Assuming binary classification
 
 # Tokenize and encode tweets for training set   
-train_input_ids = [tokenizer.encode(tweet, add_special_tokens=True, max_length=512) for tweet in train_tweets]
+train_input_ids = [tokenizer.encode(tweet, add_special_tokens=True, max_length=128, truncation=True) for tweet in train_tweets]
 train_input_ids = torch.tensor(pad_sequences(train_input_ids, padding='post', truncating='post', maxlen=None))
-train_labels = torch.tensor(train_labels)
+train_labels = torch.tensor(train_labels, dtype=torch.long)
 
 # Tokenize and encode tweets for validation set
-val_input_ids = [tokenizer.encode(tweet, add_special_tokens=True, max_length=512) for tweet in val_tweets]
+val_input_ids = [tokenizer.encode(tweet, add_special_tokens=True, max_length=128, truncation=True) for tweet in val_tweets]
 val_input_ids = torch.tensor(pad_sequences(val_input_ids, padding='post', truncating='post', maxlen=None))
-val_labels = torch.tensor(val_labels)
+val_labels = torch.tensor(val_labels, dtype=torch.long)
 
 # Tokenize and encode tweets for testing set
-test_input_ids = [tokenizer.encode(tweet, add_special_tokens=True, max_length=512) for tweet in test_tweets]
+test_input_ids = [tokenizer.encode(tweet, add_special_tokens=True, max_length=128, truncation=True) for tweet in test_tweets]
 test_input_ids = torch.tensor(pad_sequences(test_input_ids, padding='post', truncating='post', maxlen=None))
 
 # Create a DataLoader
@@ -73,7 +79,8 @@ dataset = TensorDataset(train_input_ids, torch.tensor(train_labels))
 dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
 # Set up optimizer and loss function
-optimizer = AdamW(model.parameters(), lr=1e-5)
+# optimizer = AdamW(model.parameters(), lr=1e-5)
+optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5)
 criterion = torch.nn.CrossEntropyLoss()
 
 print("start fine-tune")
@@ -82,6 +89,8 @@ print("start fine-tune")
 epochs = 3
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
+train_input_ids = train_input_ids.to(device)
+train_labels = train_labels.to(device)
 
 for epoch in range(epochs):
     print(epoch)
@@ -91,7 +100,8 @@ for epoch in range(epochs):
 
         optimizer.zero_grad()
 
-        outputs = model(inputs, labels=labels)
+        # outputs = model(inputs, labels=labels)
+        outputs = model(inputs)
         loss = criterion(outputs.logits, labels)
         
         loss.backward()
@@ -103,6 +113,9 @@ model.save_pretrained('../model/distilbert' + datetime.now().strftime('%Y_%m_%d_
 ## VALIDATION & PREDICTIONS ###
 val_dataset = TensorDataset(val_input_ids, val_labels)
 val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+
+val_input_ids = val_input_ids.to(device)
+val_labels = val_labels.to(device)
 
 # Set the model to evaluation mode
 model.eval()
@@ -137,6 +150,8 @@ print(f"Validation Accuracy: {accuracy}")
 
 #-----------------------------------------------------------------------------------------------------#
 ### PREDICTION ###
+
+test_input_ids = test_input_ids.to(device)
 
 # Set the model to evaluation mode
 model.eval()
