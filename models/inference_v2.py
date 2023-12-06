@@ -7,17 +7,8 @@ from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset, Dataset
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, AdamW
-# from transformers import BertTokenizer, BertForSequenceClassification, AdamW
+from transformers import BertTokenizer, BertForSequenceClassification, DistilBertTokenizer, DistilBertForSequenceClassification, AdamW
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-
-def get_test_ids(path):
-    file = open(path,'r')
-    lines = file.readlines()
-    for rowidx in range(len(lines)):
-        index = lines[rowidx].index(',')
-        lines[rowidx] = lines[rowidx][:index]
-    return lines    
 
 def create_csv_submission(ids, y_pred, name):
     # Check that y_pred only contains -1 and 1
@@ -62,6 +53,7 @@ class TweetDataset(Dataset):
         }
 
 user = sys.argv[1]
+model_name = sys.argv[2]
 if user == 'simon':
     device = torch.device("mps")
 else:
@@ -75,15 +67,19 @@ test_processed = pd.read_csv(test_path)
 test_tweets = test_processed['text'].values
 test_ids = test_processed["ids"].values
 
-tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+if model_name == 'distilbert':
+    tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+    model = DistilBertForSequenceClassification.from_pretrained(model_path, num_labels=2)
+elif model_name == 'bert':
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertForSequenceClassification.from_pretrained(model_path, num_labels=2)
+
+model.to(device)
 MAX_LEN = 128
 BATCH_SIZE = 32
 
 test_set = TweetDataset(test_tweets, tokenizer, MAX_LEN, test_ids)
 test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False)
-
-model = DistilBertForSequenceClassification.from_pretrained(model_path, num_labels=2)
-model.to(device)
 
 ### Prediction ###
 predictions = []
@@ -100,9 +96,7 @@ for batch in val_bar:
         _, predicted = torch.max(probabilities, 1)
         predictions.extend(predicted.cpu().numpy())
 
-#-----------------------------------------------------------------------------------------------------#
-### CREATE CSV SUBMISSION ###
-
+### Create CSV Submission ###
 predictions = np.array(predictions)
 
 y_pred = []
