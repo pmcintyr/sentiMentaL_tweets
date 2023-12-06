@@ -68,6 +68,8 @@ else:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 test_path = '../twitter-datasets/processed_test.csv'
+model_path = '/Users/simonli/Desktop/epfl/cs433/project2/sentiMentaL_tweets/model/distilbert_2023_12_06_00:24:04_0.8547515305278253%'
+submission_file_path = '../submissions/submission_distilbert_12_06.csv'
 
 test_processed = pd.read_csv(test_path)
 test_tweets = test_processed['text'].values
@@ -78,10 +80,9 @@ MAX_LEN = 128
 BATCH_SIZE = 32
 
 test_set = TweetDataset(test_tweets, tokenizer, MAX_LEN, test_ids)
-
 test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False)
 
-model = DistilBertForSequenceClassification.from_pretrained('/Users/simonli/Desktop/epfl/cs433/project2/sentiMentaL_tweets/model/distilbert_2023_12_06_00:24:04_0.8547515305278253%', num_labels=2)
+model = DistilBertForSequenceClassification.from_pretrained(model_path, num_labels=2)
 model.to(device)
 
 ### Prediction ###
@@ -104,9 +105,8 @@ for batch in val_bar:
 
 predictions = np.array(predictions)
 
-ids_test = get_test_ids('../twitter-datasets/test_data.txt')
 y_pred = []
 y_pred = predictions
 y_pred[y_pred <= 0] = -1
 y_pred[y_pred > 0] = 1
-create_csv_submission(test_ids, y_pred, "../submissions/submission_distilbert_12_06.csv")
+create_csv_submission(test_ids, y_pred, submission_file_path)
