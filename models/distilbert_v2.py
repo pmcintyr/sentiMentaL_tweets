@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import torch
 import csv
+import sys
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
@@ -60,6 +61,12 @@ def create_csv_submission(ids, y_pred, name):
         for r1, r2 in zip(ids, y_pred):
             writer.writerow({"Id": int(r1), "Prediction": int(r2)})
 
+user = sys.argv[1]
+if user == 'simon':
+    device = torch.device("mps")
+else:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 test_path = '../twitter-datasets/processed_test.csv'
 train_path = '../twitter-datasets/processed_train.csv'
 
@@ -84,7 +91,6 @@ train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(val_set, batch_size=BATCH_SIZE, shuffle=True)
 
 model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2)
-device = torch.device("mps")
 model.to(device)
 
 EPOCHS = 3

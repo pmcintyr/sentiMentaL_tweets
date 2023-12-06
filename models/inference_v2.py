@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import torch
 import csv
+import sys
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
@@ -60,6 +61,12 @@ class TweetDataset(Dataset):
             'targets': torch.tensor(label, dtype=torch.long)
         }
 
+user = sys.argv[1]
+if user == 'simon':
+    device = torch.device("mps")
+else:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 test_path = '../twitter-datasets/processed_test.csv'
 
 test_processed = pd.read_csv(test_path)
@@ -75,7 +82,6 @@ test_set = TweetDataset(test_tweets, tokenizer, MAX_LEN, test_ids)
 test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False)
 
 model = DistilBertForSequenceClassification.from_pretrained('/Users/simonli/Desktop/epfl/cs433/project2/sentiMentaL_tweets/model/distilbert_2023_12_06_00:24:04_0.8547515305278253%', num_labels=2)
-device = torch.device("mps")
 model.to(device)
 
 ### Prediction ###
