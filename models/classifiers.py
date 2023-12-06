@@ -12,19 +12,11 @@ from sklearn.linear_model import SGDClassifier
 from keras.models import Sequential
 from keras.layers import Dense
 
-import helpers.preprocessing_helper as pre
+sys.path.insert(0, os.path.dirname(os.getcwd()))
+
+import helpers.preprocessing_helper_v2 as preprocessing
 import helpers.classifiers_helper as classifier
 import helpers.submission_helper as sub
-
-def cleaning_text(data):
-    data = pre.drop_duplicates(data)
-    data = pre.remove_elongs(data)
-    data = pre.lower_case(data)
-    data = pre.spell_correct(data)
-    data = pre.lemmatizer(data)
-    data = pre.stopword(data)
-    data = pre.hashtag(data)
-    return data
 
 clean_data_again = True
 debug = False
@@ -47,9 +39,6 @@ if not reorder_vocabulary and pooling_method == "weight":
 
 # Create an instance of StandardScaler
 scaler = StandardScaler()
-
-# set the current root directory
-sys.path.insert(0, os.path.dirname(os.getcwd()))
 
 # Load data -------------------------------------------------------------------
 # Load the word embeddings
@@ -92,9 +81,11 @@ ids = np.arange(len(test_tweets))+1
 test_tweets = pd.DataFrame({'ids' : ids, 'text': test_tweets})
 
 # Use our cleaning function
-pos_tweets = cleaning_text(pos_tweets)
-neg_tweets = cleaning_text(neg_tweets)
-test_tweets = cleaning_text(test_tweets)
+pos_tweets = preprocessing.classifier_preprocessing(pos_tweets)
+pos_tweets = pos_tweets.drop_duplicates(subset=['text'])
+neg_tweets = preprocessing.classifier_preprocessing(neg_tweets)
+neg_tweets = neg_tweets.drop_duplicates(subset=['text'])
+test_tweets = preprocessing.classifier_preprocessing(test_tweets)
 
 # from pd dataframe to np array
 pos_tweets = np.array(pos_tweets['text'])
@@ -121,7 +112,6 @@ train_features, test_features = classifier.get_features(pooling_method, pos_twee
 # Split the data into training and validation sets
 labels = np.concatenate((pos_labels, neg_labels), axis=0)
 
-
 train_features = np.array(train_features)
 labels = np.array(labels)
 # Assuming train_features and labels are NumPy arrays
@@ -133,8 +123,6 @@ shuffled_indices = np.random.permutation(len(train_features))
 # Apply the shuffled indices to both features and labels
 shuffled_features = train_features[shuffled_indices]
 shuffled_labels = labels[shuffled_indices]
-
-
 
 X_train, X_val, y_train, y_val = train_test_split(train_features, labels, test_size=0.1, random_state=42)
 
@@ -153,7 +141,6 @@ elif model_type == "svm":
     model = SGDClassifier(loss='hinge', alpha=0.0001, max_iter=100, random_state=42, learning_rate='optimal', eta0=0.0, early_stopping=True, n_iter_no_change=5)
     model.fit(X_train, y_train)
     y_pred = model.predict(X_val)
-
 
 elif model_type == "neural_net":
 
