@@ -7,10 +7,9 @@ import sys
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader, TensorDataset, Dataset
+from torch.utils.data import DataLoader, Dataset
 from torch.optim.lr_scheduler import LambdaLR
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, AdamW
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+from transformers import BertTokenizer, BertForSequenceClassification, AdamW
 
 class TweetDataset(Dataset):
     def __init__(self, data, tokenizer, max_len, labels):
@@ -81,7 +80,7 @@ test_ids = test_processed['ids'].values
 
 train_tweets, val_tweets, train_labels, val_labels = train_test_split(tweets, labels, test_size=0.2, random_state=42)
 
-tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
 MAX_LEN = 128
 BATCH_SIZE = 32
 
@@ -91,7 +90,7 @@ val_set = TweetDataset(val_tweets, tokenizer, MAX_LEN, val_labels)
 train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(val_set, batch_size=BATCH_SIZE, shuffle=True)
 
-model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2)
+model = BertForSequenceClassification.from_pretrained('bert-large-uncased', num_labels=2)
 model.to(device)
 
 EPOCHS = 2
@@ -120,7 +119,6 @@ def lr_lambda(step):
 optimizer = AdamW(params=model.parameters(), lr=LEARNING_RATE, eps=1e-8, weight_decay=0.0)
 # Create a LambdaLR scheduler with the combined schedule
 scheduler = LambdaLR(optimizer, lr_lambda=lr_lambda)
-
 loss_function = torch.nn.CrossEntropyLoss()
 
 ### Training ###
@@ -137,7 +135,6 @@ for epoch in range(EPOCHS):
         loss = loss_function(outputs.logits, targets)
         loss.backward()
         optimizer.step()
-        scheduler.step()
 
         train_bar.set_postfix(loss=loss.item())
 
@@ -171,4 +168,4 @@ for epoch in range(EPOCHS):
 
     print(f"Epoch: {epoch + 1}, Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
 
-model.save_pretrained('../model/distilbert_' + datetime.now().strftime('%Y_%m_%d_%H:%M:%S') + '_' + str(accuracy) + '%')
+model.save_pretrained('../model/bert_' + datetime.now().strftime('%Y_%m_%d_%H:%M:%S') + '_' + str(accuracy) + '%')
