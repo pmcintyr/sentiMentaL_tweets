@@ -41,14 +41,6 @@ class TweetDataset(Dataset):
             'targets': torch.tensor(label, dtype=torch.long)
         }
 
-def get_test_ids(path):
-    file = open(path,'r')
-    lines = file.readlines()
-    for rowidx in range(len(lines)):
-        index = lines[rowidx].index(',')
-        lines[rowidx] = lines[rowidx][:index]
-    return lines    
-
 def create_csv_submission(ids, y_pred, name):
     # Check that y_pred only contains -1 and 1
     if not all(i in [-1, 1] for i in y_pred):
@@ -62,18 +54,6 @@ def create_csv_submission(ids, y_pred, name):
             writer.writerow({"Id": int(r1), "Prediction": int(r2)})
 
 def train():
-    EPOCHS = 2
-    LEARNING_RATE = 2e-5
-
-    if model_name == 'distilbert':
-        tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
-        model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2)
-    elif model_name == 'bert':
-        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        model = BertForSequenceClassification.from_pretrained('bert-large-uncased', num_labels=2)
-
-    model.to(device)
-
     train_processed = pd.read_csv(train_path)
     tweets = train_processed['text'].values
     labels = train_processed['label'].values
@@ -160,22 +140,62 @@ def train():
     model.save_pretrained('../model/' + model_name + '_' + datetime.now().strftime('%Y_%m_%d_%H:%M:%S') + '_' + str(accuracy) + '%')
 
 def inference():
-    return
+    test_processed = pd.read_csv(test_path)
+    test_tweets = test_processed['text'].values
+    test_ids = test_processed["ids"].values
+
+    test_set = TweetDataset(test_tweets, tokenizer, MAX_LEN, test_ids)
+    test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False)
+
+    ### Prediction ###
+    predictions = []
+
+    model.eval()
+    val_bar = tqdm(test_loader, desc=f"Testing")
+    for batch in val_bar:
+        ids = batch['ids'].to(device)
+        mask = batch['mask'].to(device)
+
+        with torch.no_grad():
+            outputs = model(ids, mask)
+            probabilities = torch.nn.functional.softmax(outputs.logits, dim=1)
+            _, predicted = torch.max(probabilities, 1)
+            predictions.extend(predicted.cpu().numpy())
+
+    ### Create CSV Submission ###
+    predictions = np.array(predictions)
+
+    y_pred = []
+    y_pred = predictions
+    y_pred[y_pred <= 0] = -1
+    y_pred[y_pred > 0] = 1
+    create_csv_submission(test_ids, y_pred, submission_file_path)
 
 user = sys.argv[1]
 model_name = sys.argv[2]
 mode = sys.argv[3]
 
-if user == 'simon':
-    device = torch.device("mps")
-else:
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 test_path = '../twitter-datasets/processed_test.csv'
 train_path = '../twitter-datasets/processed_train.csv'
+model_path = '/Users/simonli/Desktop/epfl/cs433/project2/sentiMentaL_tweets/model/distilbert_2023_12_07_02:47:38_0.8635210413104627%'
+submission_file_path = '../submissions/submission_distilbert_12_07_test.csv'
 
 MAX_LEN = 128
 BATCH_SIZE = 32
+EPOCHS = 2
+LEARNING_RATE = 2e-5
+
+device = torch.device("mps" if user == 'simon' else "cuda" if torch.cuda.is_available() else "CPU")
+
+if model_name == 'distilbert':
+    tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+    model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2) if mode == 'train' else DistilBertForSequenceClassification.from_pretrained(model_path, num_labels=2)
+
+elif model_name == 'bert':
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertForSequenceClassification.from_pretrained('bert-large-uncased', num_labels=2) if mode == 'train' else BertForSequenceClassification.from_pretrained(model_path, num_labels=2)
+
+model.to(device)
 
 if mode == 'train': train()
 elif mode == 'inference': inference()
