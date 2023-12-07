@@ -8,6 +8,7 @@ from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset, Dataset
+from torch.optim.lr_scheduler import LambdaLR
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, AdamW
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
@@ -93,9 +94,33 @@ val_loader = DataLoader(val_set, batch_size=BATCH_SIZE, shuffle=True)
 model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2)
 model.to(device)
 
-EPOCHS = 3
+EPOCHS = 2
 LEARNING_RATE = 2e-5
-optimizer = torch.optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
+
+### OPTIMIZER & SCHEDULER ###
+# optimizer = torch.optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
+
+train_data_size = len(train_tweets)
+steps_per_epoch = int(train_data_size / BATCH_SIZE)
+num_train_steps = steps_per_epoch * EPOCHS
+
+# Setting up a polynomial decay schedule
+def decay_schedule(step):
+    return max(0, (1.0 - step / num_train_steps))
+
+# Setting up a linear warm-up schedule
+def warmup_schedule(step):
+    return min(1.0, step / (num_train_steps * 0.1))
+
+# Combine the decay and warm-up schedules
+def lr_lambda(step):
+    return decay_schedule(step) * warmup_schedule(step)
+
+# Defining the AdamWeightDecay optimizer
+optimizer = AdamW(params=model.parameters(), lr=LEARNING_RATE, eps=1e-8, weight_decay=0.0)
+# Create a LambdaLR scheduler with the combined schedule
+scheduler = LambdaLR(optimizer, lr_lambda=lr_lambda)
+
 loss_function = torch.nn.CrossEntropyLoss()
 
 ### Training ###
@@ -112,6 +137,7 @@ for epoch in range(EPOCHS):
         loss = loss_function(outputs.logits, targets)
         loss.backward()
         optimizer.step()
+        scheduler.step()
 
         train_bar.set_postfix(loss=loss.item())
 

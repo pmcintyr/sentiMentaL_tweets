@@ -60,8 +60,8 @@ else:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 test_path = '../twitter-datasets/processed_test.csv'
-model_path = '/Users/simonli/Desktop/epfl/cs433/project2/sentiMentaL_tweets/model/distilbert_2023_12_06_00:24:04_0.8547515305278253%'
-submission_file_path = '../submissions/submission_distilbert_12_06.csv'
+model_path = '/Users/simonli/Desktop/epfl/cs433/project2/sentiMentaL_tweets/model/distilbert_2023_12_07_02:47:38_0.8635210413104627%'
+submission_file_path = '../submissions/submission_distilbert_12_07_epoch2.csv'
 
 test_processed = pd.read_csv(test_path)
 test_tweets = test_processed['text'].values
