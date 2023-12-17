@@ -15,6 +15,7 @@ from nltk.tokenize import TweetTokenizer
 from nltk.stem import PorterStemmer
 from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
+from emoticons import EMOTICONS_GLOVE
 
 ssl._create_default_https_context = ssl._create_unverified_context
 nltk.download('stopwords')
@@ -205,9 +206,37 @@ def spacing():
     data['text'] = data['text'].apply(lambda text: text.strip())
     data.reset_index(inplace=True, drop=True)
 
-def final_parenthesis(self):
+def final_parenthesis():
     data['text'] = data['text'].str.replace('\)+$', ':)')
     data['text'] = data['text'].str.replace('\(+$', ':(')
+
+def remove_space_between_emoticons():
+    """
+    Removes spaces between emoticons (e.g.: ': )' --> ':)').
+    Adds a space between a word and an emoticon (e.g.: 'hello:)' --> 'hello :)')
+    """
+
+    print('Removing space between emoticons...')
+
+    # Getting list of all emoticons
+    emo_list = [el for value in list(EMOTICONS_GLOVE.values()) for el in value]
+
+    # Putting a space between each character in each emoticon
+    emo_with_spaces = '|'.join(re.escape(' '.join(emo)) for emo in emo_list)
+
+    # Getting all emoticons that don't contain any alphanumeric character
+    all_non_alpha_emo = '|'.join(re.escape(emo) for emo in emo_list if not any(
+      char.isalpha() or char.isdigit() for char in emo))
+
+    # Removing spaces between emoticons
+    data['text'] = data['text'].str.replace(
+      emo_with_spaces,
+      lambda t: t.group().replace(' ', ''))
+
+    # Adding space between a word and an emoticon
+    data['text'] = data['text'].str.replace(
+      rf'({all_non_alpha_emo})',
+      r' \1 ')
 
 def main(argv):
     dataset = argv[0]
@@ -250,6 +279,12 @@ def main(argv):
         remove_tags()
         final_parenthesis()
         spacing()
+        remove_space_between_emoticons()
+        spacing()
+    elif model == 'bertweet':
+        lower_case()
+        remove_tags()
+        spacing()
         empty()
 
     data = data.sample(frac=1)
@@ -257,7 +292,7 @@ def main(argv):
     if dataset == 'train':
         data.to_csv('../twitter-datasets/processed_train.csv', index=False)
     elif dataset == 'train_full':
-        data.to_csv('../twitter-datasets/processed_train_full.csv', index=False)
+        data.to_csv('../twitter-datasets/train_full.csv', index=False)
     elif dataset == 'test':
         data.to_csv('../twitter-datasets/processed_test.csv', index=False)
     else: print(data)
