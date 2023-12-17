@@ -9,7 +9,9 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from torch.optim.lr_scheduler import LambdaLR
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, BertTokenizer, BertForSequenceClassification, AdamW
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, BertTokenizer, BertForSequenceClassification, AutoModel, AutoTokenizer, AdamW
+from transformers import get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
+from torch import nn
 
 class TweetDataset(Dataset):
     def __init__(self, data, tokenizer, max_len, labels):
@@ -41,6 +43,24 @@ class TweetDataset(Dataset):
             'targets': torch.tensor(label, dtype=torch.long)
         }
 
+class SentimentClassifier(nn.Module):
+
+  def __init__(self, n_classes):
+    super(SentimentClassifier, self).__init__()
+    self.bert = AutoModel.from_pretrained("vinai/bertweet-base")
+    #self.drop = nn.Dropout(p = 0.33)
+    self.out = nn.Linear(self.bert.config.hidden_size, n_classes)
+  
+  def forward(self, input_ids, attention_mask):
+    _, pooled_output = self.bert(
+      input_ids=input_ids,
+      attention_mask=attention_mask,
+      return_dict=False
+    )
+    #output = self.drop(pooled_output)
+    output = pooled_output
+    return self.out(output)
+
 def create_csv_submission(ids, y_pred, name):
     # Check that y_pred only contains -1 and 1
     if not all(i in [-1, 1] for i in y_pred):
@@ -70,22 +90,14 @@ def train():
     steps_per_epoch = int(train_data_size / BATCH_SIZE)
     num_train_steps = steps_per_epoch * EPOCHS
 
-    # Setting up a polynomial decay schedule
-    def decay_schedule(step):
-        return max(0, (1.0 - step / num_train_steps))
-
-    # Setting up a linear warm-up schedule
-    def warmup_schedule(step):
-        return min(1.0, step / (num_train_steps * 0.1))
-
-    # Combine the decay and warm-up schedules
-    def lr_lambda(step):
-        return decay_schedule(step) * warmup_schedule(step)
-
-    # Defining the AdamWeightDecay optimizer
-    optimizer = AdamW(params=model.parameters(), lr=LEARNING_RATE, eps=1e-8, weight_decay=0.0)
+    # Defining the AdamWeightDecay optimizer & 
     # Create a LambdaLR scheduler with the combined schedule
-    scheduler = LambdaLR(optimizer, lr_lambda=lr_lambda)
+    # optimizer = AdamW(params=model.parameters(), lr=LEARNING_RATE, eps=1e-8, weight_decay=0.0)
+    # scheduler = LambdaLR(optimizer, lr_lambda=lr_lambda)
+
+    optimizer = AdamW(model.parameters(), lr=LEARNING_RATE, eps=1e-8)  # Using AdamW for weight decay
+    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=int(0.1 * num_train_steps), num_training_steps=num_train_steps)
+    # scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=int(0.1 * num_train_steps), num_training_steps=num_train_steps)
 
     loss_function = torch.nn.CrossEntropyLoss()
 
@@ -100,7 +112,12 @@ def train():
 
             optimizer.zero_grad()
             outputs = model(ids, mask)
-            loss = loss_function(outputs.logits, targets)
+
+            if model_name == 'bert' or model_name == 'distilbert':
+                loss = loss_function(outputs.logits, targets)
+            elif model_name == 'bertweet':
+                loss = loss_function(outputs, targets)
+
             loss.backward()
             optimizer.step()
             scheduler.step()
@@ -121,13 +138,18 @@ def train():
 
             with torch.no_grad():
                 outputs = model(ids, mask)
-                loss = loss_function(outputs.logits, targets)
+
+                if model_name == 'bert' or model_name == 'distilbert':
+                    loss = loss_function(outputs.logits, targets)
+                    probabilities = torch.nn.functional.softmax(outputs.logits, dim=1)
+                    _, predicted = torch.max(probabilities, 1)
+                    total_correct += (predicted == targets).sum().item()
+                elif model_name == 'bertweet':
+                    loss = loss_function(outputs, targets)
+                    _, preds = torch.max(outputs, dim=1)
+                    total_correct += (preds == targets).sum().item()
+                
                 total_loss += loss.item()
-
-                probabilities = torch.nn.functional.softmax(outputs.logits, dim=1)
-                _, predicted = torch.max(probabilities, 1)
-
-                total_correct += (predicted == targets).sum().item()
                 total_samples += targets.size(0)
 
                 val_bar.set_postfix(loss=loss.item())
@@ -137,7 +159,12 @@ def train():
 
         print(f"Epoch: {epoch + 1}, Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
 
-    model.save_pretrained('../model/' + model_name + '_' + datetime.now().strftime('%Y_%m_%d_%H:%M:%S') + '_' + str(accuracy) + '%')
+    inference()
+
+    if model_name == 'bert' or model_name == 'distilbert':
+        model.save_pretrained('../model/' + model_name + '_' + datetime.now().strftime('%Y_%m_%d_%H:%M:%S') + '_' + str(accuracy) + '%')
+    elif model_name == 'bertweet':
+        torch.save(model.state_dict(), '../model/bertweet_best_model_state.bin')
 
 def inference():
     test_processed = pd.read_csv(test_path)
@@ -158,9 +185,14 @@ def inference():
 
         with torch.no_grad():
             outputs = model(ids, mask)
-            probabilities = torch.nn.functional.softmax(outputs.logits, dim=1)
-            _, predicted = torch.max(probabilities, 1)
-            predictions.extend(predicted.cpu().numpy())
+
+            if model_name == 'bert' or model_name == 'distilbert':
+                probabilities = torch.nn.functional.softmax(outputs.logits, dim=1)
+                _, predicted = torch.max(probabilities, 1)
+                predictions.extend(predicted.cpu().numpy())
+            elif model_name == 'bertweet':
+                _, preds = torch.max(outputs, dim=1)
+                predictions.extend(preds.cpu().numpy())
 
     ### Create CSV Submission ###
     predictions = np.array(predictions)
@@ -176,24 +208,28 @@ model_name = sys.argv[2]
 mode = sys.argv[3]
 
 test_path = '../twitter-datasets/processed_test.csv'
-train_path = '../twitter-datasets/processed_train.csv'
-model_path = '/Users/simonli/Desktop/epfl/cs433/project2/sentiMentaL_tweets/model/distilbert_2023_12_07_02:47:38_0.8635210413104627%'
-submission_file_path = '../submissions/submission_distilbert_12_07_test.csv'
+train_path = '../twitter-datasets/train_full.csv'
+model_path = '../model/distilbert_2023_12_07_02:47:38_0.8635210413104627%'
+submission_file_path = '../submissions/submission_bertweet.csv'
 
 MAX_LEN = 128
 BATCH_SIZE = 32
-EPOCHS = 2
+EPOCHS = 3
 LEARNING_RATE = 2e-5
 
-device = torch.device("mps" if user == 'simon' else "cuda" if torch.cuda.is_available() else "CPU")
+device = torch.device("mps" if user == 'simon' else "cuda" if torch.cuda.is_available() else "cpu")
 
 if model_name == 'distilbert':
     tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
     model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2) if mode == 'train' else DistilBertForSequenceClassification.from_pretrained(model_path, num_labels=2)
 
 elif model_name == 'bert':
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
     model = BertForSequenceClassification.from_pretrained('bert-large-uncased', num_labels=2) if mode == 'train' else BertForSequenceClassification.from_pretrained(model_path, num_labels=2)
+
+elif model_name == 'bertweet':
+    tokenizer = AutoTokenizer.from_pretrained("vinai/bertweet-base", normalization = True, use_fast=False)
+    model = SentimentClassifier(2)
 
 model.to(device)
 
