@@ -68,9 +68,6 @@ for tweet in tweets:
 
 result = [1 if x == 'POSITIVE' else -1 for x in result]
 
-# accuracy = accuracy_score(labels, result)
-# print(f"Validation Accuracy: {accuracy}")
-
 ids_test = get_test_ids('../twitter-datasets/test_data.txt')
 create_csv_submission(ids_test, result, "../submissions/submission_trans.csv")
 

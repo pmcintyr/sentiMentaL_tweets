@@ -15,7 +15,6 @@ from nltk.tokenize import TweetTokenizer
 from nltk.stem import PorterStemmer
 from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
-from emoticons import EMOTICONS_GLOVE
 
 ssl._create_default_https_context = ssl._create_unverified_context
 nltk.download('stopwords')
@@ -274,19 +273,26 @@ def main(argv):
     if dataset == 'train' or dataset == 'train_full':
         data = data.drop_duplicates(subset=['text'])
 
-    if model == 'distilbert' or model == 'bert':
+    if model in ['distilbert', 'bert']:
         lower_case()
         remove_tags()
-        final_parenthesis()
-        spacing()
-        remove_space_between_emoticons()
         spacing()
     elif model == 'bertweet':
         lower_case()
         remove_tags()
         spacing()
+    elif model in ['logistic', 'svm', 'neural_net']:
+        lower_case()
+        remove_elongs()
+        spell_correct()
+        spacing()
+        letters()
+        lemmatizer()
+        stopword()
+        hashtag()
         empty()
-
+        spacing()
+    
     data = data.sample(frac=1)
 
     if dataset == 'train':
@@ -297,6 +303,4 @@ def main(argv):
         data.to_csv('../twitter-datasets/processed_test.csv', index=False)
     else: print(data)
 
-if __name__ == "__main__":
-   print(sys.argv[1:])
-   main(sys.argv[1:])
+    return data
