@@ -154,10 +154,10 @@ def train():
 
         print(f"Epoch: {epoch + 1}, Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
 
-    if model_name == 'bert' or model_name == 'distilbert':
-        model.save_pretrained('../model/' + model_name + '_' + datetime.now().strftime('%Y_%m_%d_%H:%M:%S') + '_' + str(accuracy) + '%')
-    elif model_name == 'bertweet':
-        torch.save(model.state_dict(), '../model/bertweet_best_model_state.bin')
+    # if model_name == 'bert' or model_name == 'distilbert':
+    #     model.save_pretrained('../model/' + model_name + '_' + datetime.now().strftime('%Y_%m_%d_%H:%M:%S') + '_' + str(accuracy) + '%')
+    # elif model_name == 'bertweet':
+    #     torch.save(model.state_dict(), '../model/bertweet_best_model_state.bin')
 
 def inference():
     test_processed = pd.read_csv(test_path)
