@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import csv
 import sys
+import os
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
@@ -12,6 +13,7 @@ from torch.optim.lr_scheduler import LambdaLR
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, BertTokenizer, BertForSequenceClassification, AutoModel, AutoTokenizer, AdamW
 from transformers import get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
 from torch import nn
+from preprocessing_helper import preprocessing
 
 class TweetDataset(Dataset):
     def __init__(self, data, tokenizer, max_len, labels):
@@ -48,7 +50,6 @@ class SentimentClassifier(nn.Module):
   def __init__(self, n_classes):
     super(SentimentClassifier, self).__init__()
     self.bert = AutoModel.from_pretrained("vinai/bertweet-base")
-    #self.drop = nn.Dropout(p = 0.33)
     self.out = nn.Linear(self.bert.config.hidden_size, n_classes)
   
   def forward(self, input_ids, attention_mask):
@@ -57,7 +58,6 @@ class SentimentClassifier(nn.Module):
       attention_mask=attention_mask,
       return_dict=False
     )
-    #output = self.drop(pooled_output)
     output = pooled_output
     return self.out(output)
 
@@ -89,11 +89,6 @@ def train():
     train_data_size = len(train_tweets)
     steps_per_epoch = int(train_data_size / BATCH_SIZE)
     num_train_steps = steps_per_epoch * EPOCHS
-
-    # Defining the AdamWeightDecay optimizer & 
-    # Create a LambdaLR scheduler with the combined schedule
-    # optimizer = AdamW(params=model.parameters(), lr=LEARNING_RATE, eps=1e-8, weight_decay=0.0)
-    # scheduler = LambdaLR(optimizer, lr_lambda=lr_lambda)
 
     optimizer = AdamW(model.parameters(), lr=LEARNING_RATE, eps=1e-8)  # Using AdamW for weight decay
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=int(0.1 * num_train_steps), num_training_steps=num_train_steps)
@@ -159,8 +154,6 @@ def train():
 
         print(f"Epoch: {epoch + 1}, Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
 
-    inference()
-
     if model_name == 'bert' or model_name == 'distilbert':
         model.save_pretrained('../model/' + model_name + '_' + datetime.now().strftime('%Y_%m_%d_%H:%M:%S') + '_' + str(accuracy) + '%')
     elif model_name == 'bertweet':
@@ -206,15 +199,22 @@ def inference():
 user = sys.argv[1]
 model_name = sys.argv[2]
 mode = sys.argv[3]
+submission_name = sys.argv[4]
 
 test_path = '../twitter-datasets/processed_test.csv'
-train_path = '../twitter-datasets/train_full.csv'
-model_path = '../model/distilbert_2023_12_07_02:47:38_0.8635210413104627%'
-submission_file_path = '../submissions/submission_bertweet.csv'
+train_path = '../twitter-datasets/process_train_full.csv'
+model_path = '../model/distilbert'
+submission_file_path = '../submissions/' + submission_name + '.csv'
+
+if not os.path.isfile(train_path):
+    preprocessing(model_name, 'train_full')
+
+if not os.path.isfile(test_path):
+    preprocessing(model_name, 'test')
 
 MAX_LEN = 128
 BATCH_SIZE = 32
-EPOCHS = 3
+EPOCHS = 2
 LEARNING_RATE = 2e-5
 
 device = torch.device("mps" if user == 'simon' else "cuda" if torch.cuda.is_available() else "cpu")
@@ -233,5 +233,8 @@ elif model_name == 'bertweet':
 
 model.to(device)
 
-if mode == 'train': train()
-elif mode == 'inference': inference()
+if mode == 'train': 
+    train()
+    inference()
+elif mode == 'inference': 
+    inference()
