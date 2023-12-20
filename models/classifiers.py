@@ -19,15 +19,15 @@ import helpers.classifiers_helper as classifier
 import helpers.submission_helper as sub
 
 clean_data_again = True
-debug = False
+debug = True
 
 # select if we want to order the vocabulary by frequency in the text [needed for the calculation of the weight]
 reorder_vocabulary = True
 # Select if we want to get the list of the words present in the text but not in the vocabulary
-list_words_not_in_vocab = True
+list_words_not_in_vocab = False
 
-pooling_method = "x" # "mean", "max", "tfidf", "weight"
-model_type = "x" # "logistic", "svm", "neural_net"
+pooling_method = "mean" # "mean", "max", "tfidf", "weight"
+model_type = "logistic" # "logistic", "svm", "neural_net"
 
 if debug and clean_data_again:
   #clean_data_again = False
@@ -87,7 +87,10 @@ neg_tweets = preprocessing.classifier_preprocessing(neg_tweets)
 neg_tweets = neg_tweets.drop_duplicates(subset=['text'])
 test_tweets = preprocessing.classifier_preprocessing(test_tweets)
 
+
 # from pd dataframe to np array
+pos_labels = np.array(pos_tweets['label'])
+neg_labels = np.array(neg_tweets['label'])
 pos_tweets = np.array(pos_tweets['text'])
 neg_tweets = np.array(neg_tweets['text'])
 test_tweets = np.array(test_tweets['text'])

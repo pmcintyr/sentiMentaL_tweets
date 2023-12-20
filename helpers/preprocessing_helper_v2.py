@@ -281,6 +281,7 @@ def classifier_preprocessing(target):
     spell_correct()
     spacing()
     letters()
+    data['text'] = data['text'].apply(' '.join)
     lemmatizer()
     stopword()
     hashtag()
