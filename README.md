@@ -54,7 +54,7 @@ Tasks of the code for the BERT (standard BERT, DistilBERT, BERTweet):
    
 Execute `classifiers.py`. in the “models” directory. Check in the file first few lines that the "debug" is set to False, and the "clean_data_again" is set to true. These are needed to pre-process the data. After that choose your pooling method in the choice list: "mean", "max", "tfidf", "weight" as well as the model type in "logistic", "svm", "neural_net". The code with "debug = False" will run over several hours.
 
-(add execution methods for BERT models)
+Execute `bert.py` in the "models" directory. You may set arguments to specify 1) `username` can be specified for local setups, otherwise write a placeholder username) 2) `model_name` can be distilbert, bert or bertweet depending on which model you would like to run 3) `mode` can be set to train or inference: you should first run the train mode then proceed with the inference mode.
 
 All other required helper functions are contained in the folder `helpers` and loaded in the different scripts.
 
