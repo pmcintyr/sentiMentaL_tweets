@@ -67,7 +67,4 @@ All other required helper functions are contained in the folder `helpers` and lo
 This project is not licensed.
 
 ## Acknowledgments
-We would like to thank the EPFL's professors of the course CS-433 Machine Learning and the associated teaching assistants for their help and support.
-(add any acknowledgment here)
-
-
+We would like to thank the EPFL's professors of the course CS-433 Machine Learning and the associated teaching assistants for their help and support as well for the EPFL cluster access.
