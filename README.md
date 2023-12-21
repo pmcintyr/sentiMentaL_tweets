@@ -51,7 +51,7 @@ Tasks of the code for the BERT (standard BERT, DistilBERT, BERTweet):
 
    There are several CSV files: `twitter-datasets/test_data.txt`, `twitter-datasets/train_neg.txt`, `twitter-datasets/train_neg_full.txt`, `twitter-datasets/train_pos.txt`, `twitter-datasets/train_pos_full.txt`, and `twitter-datasets/sample_submission.csv`.
    
-Execute `classifiers.py`. in the “models” directory. Check in the file first few lines that the "debug" is set to False, and choose your pooling method in the choice list: "mean", "max", "tfidf", "weight" as well as the model type in "logistic", "svm", "neural_net"
+Execute `classifiers.py`. in the “models” directory. Check in the file first few lines that the "debug" is set to False, and the "clean_data_again" is set to true. These are needed to pre-process the data. After that choose your pooling method in the choice list: "mean", "max", "tfidf", "weight" as well as the model type in "logistic", "svm", "neural_net". The code with "debug = False" will run over several hours.
 
 (add execution methods for BERT models)
 
