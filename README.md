@@ -6,7 +6,7 @@ Tweet text classification project for positive and negative sentiment as part of
 
 Tasks of the code for the standard classifiers (logistic regression, support vector machines, neural network):
 - Load the data
-- pre-process the data: set all cases to lower cases, remove words that are too long (i.e. "hellooo" becomes "hello"), correct the spelling of all words, check for the correct spacing between words, strip away all non-alphabetic and space character, lemmatize all words, remove stop words (i.e. "the", "in", "and"), remove hashtags, replaces any empty sequence with a special token, recheck for the correct spacing between words
+- Preprocess the data: set all cases to lower cases, remove words that are too long (i.e. "hellooo" becomes "hello"), correct the spelling of all words, check for the correct spacing between words, strip away all non-alphabetic and space character, lemmatize all words, remove stop words (i.e. "the", "in", "and"), remove hashtags, replaces any empty sequence with a special token, recheck for the correct spacing between words
 - Optional: reorder the vocabulary according to the word frequency in the tweet sample and save it in a file.
 - Optional: list all the words in the tweet not present in the vocabulary
 - Train the selected model: either a logistic regression, a support vector machine, or a neural network.
@@ -16,9 +16,11 @@ Tasks of the code for the standard classifiers (logistic regression, support vec
     - "tfidf" : Using TF-IDF weights for each tweet, where each document is a tweet.
     - "weight" : Using defined weights. It is based on the following algorithm: it calculates the number of occurrences of a word in the positive tweets and the number of occurrences in the negative tweets. If a word is more present in the positive tweets, the weight is set to $\frac{occurence_{pos}}{occurence_{neg}}$, and if a word is more present in the negative tweets, the weight is set to $\frac{occurence_{neg}}{occurence_{pos}}$.
 
-Tasks of the code for the BERT (standard BERT, DistilBERT, BERTweet):
-
-(add here anything on BERT that is more specific)
+Tasks of the code for BERT (standard BERT, DistilBERT, BERTweet):
+- Load the Data
+- Preprocess the data according to the basic or advanced preprocessing functions in the report.
+- Run the training mode: train specific BERT models such as DistilBERT, BERT or BERTweet.
+- Run the inference mode: make predictions on new data using the trained BERT model.
 
 ## Setup
 
@@ -33,9 +35,9 @@ Tasks of the code for the BERT (standard BERT, DistilBERT, BERTweet):
   - setuptools (version >= 67.7.2)
   - nltk (version >= 3.8.1)
   - symspellpy (version >= 6.7.7)
-  - torch (version == 2.1.2)
-  - setuptools_rust (version == 1.8.1)
-  - transformers (version == 4.36.2)
+  - torch (version >= 2.1.2)
+  - setuptools_rust (version >= 1.8.1)
+  - transformers (version >= 4.36.2)
 
     You can install these libraries using `pip` or any other package manager.
     Remark: older versions of the above packages may work, but have not been tested.
