@@ -61,7 +61,7 @@ All other required helper functions are contained in the folder `helpers` and lo
 ## Authors
 - Junyou Li : junyou.li@epfl.ch
 - Wanchai Grossrieder : wanchai.grossrieder@epfl.ch
-* Paul McIntyre (add your email address here)
+* Paul McIntyre paul.mcintyre@epfl.ch
 
 ## Licence
 This project is not licensed.
