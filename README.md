@@ -36,8 +36,9 @@ Tasks of the code for the BERT (standard BERT, DistilBERT, BERTweet):
   - setuptools (version >= 67.7.2)
   - nltk (version >= 3.8.1)
   - symspellpy (version >= 6.7.7)
-
-(add here anything on BERT that is more specific, package required)
+  - torch
+  - setuptools_rust
+  - transformers
 
     You can install these libraries using `pip` or any other package manager.
     Remark: older versions of the above packages may work, but have not been tested.
